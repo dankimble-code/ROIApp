@@ -8,6 +8,8 @@ import { ProgramStep } from './steps/ProgramStep';
 import { BenefitsStep } from './steps/BenefitsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { Organization, Program, Benefit } from '@/types/coaching';
+import { useCreateOrganization } from '@/hooks/useOrganizations';
+import { useCreateProgram } from '@/hooks/usePrograms';
 
 interface ProgramWizardProps {
   onComplete: () => void;
@@ -19,6 +21,9 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
   const [organization, setOrganization] = useState<Partial<Organization>>({});
   const [program, setProgram] = useState<Partial<Program>>({});
   const [benefits, setBenefits] = useState<Partial<Benefit>[]>([]);
+
+  const createOrganization = useCreateOrganization();
+  const createProgram = useCreateProgram();
 
   const steps = [
     { id: 1, title: 'Organization', description: 'Company information' },
@@ -43,9 +48,28 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
   };
 
   const handleComplete = async () => {
-    // Here we would save to Supabase
-    console.log('Creating program with:', { organization, program, benefits });
-    onComplete();
+    try {
+      // Create organization first
+      const orgData = await createOrganization.mutateAsync({
+        name: organization.name!,
+        industry: organization.industry,
+        employee_count: organization.employee_count,
+      });
+
+      // Then create program
+      await createProgram.mutateAsync({
+        organization_id: orgData.id,
+        name: program.name!,
+        duration_months: program.duration_months!,
+        participants_count: program.participants_count!,
+        cost_per_participant: program.cost_per_participant!,
+        overhead_costs: program.overhead_costs || 0,
+      });
+
+      onComplete();
+    } catch (error) {
+      console.error('Error creating program:', error);
+    }
   };
 
   const renderStep = () => {

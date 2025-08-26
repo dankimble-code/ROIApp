@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,104 +10,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { supabase } from '@/integrations/supabase/client';
-import { Program, Organization } from '@/types/coaching';
-import { useToast } from '@/hooks/use-toast';
+import { usePrograms, useDeleteProgram, useDuplicateProgram } from '@/hooks/usePrograms';
 
 interface ProgramListProps {
   onCompare: (programIds: string[]) => void;
 }
 
 export function ProgramList({ onCompare }: ProgramListProps) {
-  const [programs, setPrograms] = useState<(Program & { organization: Organization })[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
-  const { toast } = useToast();
+  
+  const { data: programs = [], isLoading } = usePrograms();
+  const deleteProgram = useDeleteProgram();
+  const duplicateProgram = useDuplicateProgram();
 
-  useEffect(() => {
-    fetchPrograms();
-  }, []);
-
-  const fetchPrograms = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('programs')
-        .select(`
-          *,
-          organization:organizations(*)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPrograms(data || []);
-    } catch (error) {
-      console.error('Error fetching programs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load programs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleDuplicate = (programId: string) => {
+    duplicateProgram.mutate(programId);
   };
 
-  const handleDuplicate = async (program: Program) => {
-    try {
-      const { data, error } = await supabase
-        .from('programs')
-        .insert({
-          organization_id: program.organization_id,
-          name: `${program.name} (Copy)`,
-          duration_months: program.duration_months,
-          participants_count: program.participants_count,
-          cost_per_participant: program.cost_per_participant,
-          overhead_costs: program.overhead_costs,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Program duplicated successfully"
-      });
-      
-      fetchPrograms();
-    } catch (error) {
-      console.error('Error duplicating program:', error);
-      toast({
-        title: "Error",
-        description: "Failed to duplicate program",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDelete = async (programId: string) => {
-    try {
-      const { error } = await supabase
-        .from('programs')
-        .delete()
-        .eq('id', programId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Program deleted successfully"
-      });
-      
-      fetchPrograms();
-    } catch (error) {
-      console.error('Error deleting program:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete program",
-        variant: "destructive"
-      });
-    }
+  const handleDelete = (programId: string) => {
+    deleteProgram.mutate(programId);
   };
 
   const toggleProgramSelection = (programId: string) => {
@@ -117,17 +38,14 @@ export function ProgramList({ onCompare }: ProgramListProps) {
       } else if (prev.length < 3) {
         return [...prev, programId];
       } else {
-        toast({
-          title: "Limit Reached",
-          description: "You can only compare up to 3 programs at once",
-          variant: "destructive"
-        });
+        // Toast would be handled by the hook, but we can add a simple alert here
+        alert("You can only compare up to 3 programs at once");
         return prev;
       }
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -217,7 +135,7 @@ export function ProgramList({ onCompare }: ProgramListProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
-                        handleDuplicate(program);
+                        handleDuplicate(program.id);
                       }}>
                         <Copy className="mr-2 h-4 w-4" />
                         Duplicate

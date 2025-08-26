@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Download } from 'lucide-react';
 import { Program, Organization, Benefit } from '@/types/coaching';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { usePrograms } from '@/hooks/usePrograms';
+import { useBenefits } from '@/hooks/useBenefits';
 
 interface CompareViewProps {
   programIds: string[];
@@ -12,59 +12,36 @@ interface CompareViewProps {
 }
 
 export function CompareView({ programIds, onBack }: CompareViewProps) {
-  const [programs, setPrograms] = useState<(Program & { 
-    organization: Organization; 
-    benefits: Benefit[];
-  })[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { data: allPrograms = [] } = usePrograms();
+  const programs = allPrograms.filter(program => programIds.includes(program.id));
+  
+  // Fetch benefits for each program
+  const benefitQueries = programIds.map(id => useBenefits(id));
+  const benefitsByProgram = Object.fromEntries(
+    programIds.map((id, index) => [id, benefitQueries[index].data || []])
+  );
 
-  useEffect(() => {
-    fetchProgramDetails();
-  }, [programIds]);
+  const isLoading = benefitQueries.some(query => query.isLoading);
 
-  const fetchProgramDetails = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('programs')
-        .select(`
-          *,
-          organization:organizations(*),
-          benefits(*)
-        `)
-        .in('id', programIds);
-
-      if (error) throw error;
-      setPrograms(data || []);
-    } catch (error) {
-      console.error('Error fetching program details:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load program details",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const calculateROI = (program: Program & { benefits: Benefit[] }) => {
+  const calculateROI = (program: Program & { organization: Organization }) => {
+    const benefits = benefitsByProgram[program.id] || [];
     const totalInvestment = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
-    const totalBenefits = program.benefits.reduce((sum, benefit) => 
+    const totalBenefits = benefits.reduce((sum, benefit) => 
       sum + (benefit.annual_value * (benefit.attribution_percentage / 100)), 0
     );
     return totalBenefits > 0 ? ((totalBenefits - totalInvestment) / totalInvestment) * 100 : 0;
   };
 
-  const calculatePayback = (program: Program & { benefits: Benefit[] }) => {
+  const calculatePayback = (program: Program & { organization: Organization }) => {
+    const benefits = benefitsByProgram[program.id] || [];
     const totalInvestment = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
-    const annualBenefits = program.benefits.reduce((sum, benefit) => 
+    const annualBenefits = benefits.reduce((sum, benefit) => 
       sum + (benefit.annual_value * (benefit.attribution_percentage / 100)), 0
     );
     return annualBenefits > 0 ? totalInvestment / annualBenefits : 0;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -177,7 +154,7 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
                   <td className="p-4 font-medium text-muted-foreground">Benefits Count</td>
                   {programs.map((program) => (
                     <td key={program.id} className="p-4">
-                      {program.benefits?.length || 0} benefits
+                      {benefitsByProgram[program.id]?.length || 0} benefits
                     </td>
                   ))}
                 </tr>
@@ -223,17 +200,17 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
                     <div>
                       <p className="text-muted-foreground">Benefits</p>
                       <p className="font-medium text-lg">
-                        {program.benefits?.length || 0}
+                        {benefitsByProgram[program.id]?.length || 0}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {program.benefits && program.benefits.length > 0 && (
+                {benefitsByProgram[program.id] && benefitsByProgram[program.id].length > 0 && (
                   <div>
                     <h4 className="font-semibold mb-2">Key Benefits</h4>
                     <div className="space-y-2">
-                      {program.benefits.map((benefit) => (
+                      {benefitsByProgram[program.id].map((benefit) => (
                         <div key={benefit.id} className="flex justify-between items-center p-3 bg-muted rounded-lg">
                           <div>
                             <p className="font-medium">{benefit.description}</p>
