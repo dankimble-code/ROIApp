@@ -10,6 +10,8 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut, loading } = useAuth();
+  
+  console.log('AppLayout rendering - subtitle should show: by Daniel Kimble');
 
   if (loading) {
     return (
