@@ -3,6 +3,7 @@ export interface Organization {
   name: string;
   industry?: string;
   employee_count?: number;
+  user_id: string;
   created_at: string;
   updated_at: string;
 }

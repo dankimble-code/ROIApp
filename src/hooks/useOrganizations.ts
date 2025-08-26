@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Organization } from '@/types/coaching';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
-export type CreateOrganizationData = Omit<Organization, 'id' | 'created_at' | 'updated_at'>;
-export type UpdateOrganizationData = Partial<Omit<Organization, 'id' | 'created_at' | 'updated_at'>>;
+export type CreateOrganizationData = Omit<Organization, 'id' | 'created_at' | 'updated_at' | 'user_id'>;
+export type UpdateOrganizationData = Partial<Omit<Organization, 'id' | 'created_at' | 'updated_at' | 'user_id'>>;
 
 // Fetch all organizations
 export function useOrganizations() {
@@ -52,15 +53,21 @@ export function useOrganization(id: string) {
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateOrganizationData): Promise<Organization> => {
+      if (!user) {
+        throw new Error('User must be authenticated to create an organization');
+      }
+
       const { data: organization, error } = await supabase
         .from('organizations')
         .insert({
           name: data.name,
           industry: data.industry,
           employee_count: data.employee_count,
+          user_id: user.id,
         })
         .select()
         .single();
