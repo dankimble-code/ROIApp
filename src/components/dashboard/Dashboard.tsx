@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Calculator, TrendingUp, FileText, Copy } from 'lucide-react';
+import { Plus, Calculator, TrendingUp, FileText, Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,11 +7,17 @@ import { ProgramWizard } from '@/components/wizard/ProgramWizard';
 import { ProgramList } from '@/components/programs/ProgramList';
 import { CompareView } from '@/components/compare/CompareView';
 import { BenchmarkView } from '@/components/benchmark/BenchmarkView';
+import { PDFExportService, DashboardData } from '@/lib/pdf-export';
+import { usePrograms } from '@/hooks/usePrograms';
+import { useToast } from '@/hooks/use-toast';
 
 export function Dashboard() {
   const [showWizard, setShowWizard] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  
+  const { data: programs = [] } = usePrograms();
+  const { toast } = useToast();
 
   const handleProgramCreated = () => {
     setShowWizard(false);
@@ -21,6 +27,56 @@ export function Dashboard() {
   const handleComparePrograms = (programIds: string[]) => {
     setSelectedPrograms(programIds);
     setShowCompare(true);
+  };
+
+  const handleExportDashboard = async () => {
+    try {
+      const pdfService = new PDFExportService();
+      
+      // Calculate dashboard statistics
+      const totalInvestment = programs.reduce((sum, program) => 
+        sum + (program.cost_per_participant * program.participants_count) + program.overhead_costs, 0
+      );
+      const totalParticipants = programs.reduce((sum, program) => sum + program.participants_count, 0);
+      
+      const dashboardData: DashboardData = {
+        programs,
+        stats: {
+          activePrograms: programs.length,
+          averageROI: 0, // Would need benefits data to calculate
+          totalInvestment,
+          totalParticipants
+        }
+      };
+
+      const sources = [
+        'International Coaching Federation (ICF) - Global Coaching Study 2023',
+        'Harvard Business Review - The Case for Executive Coaching',
+        'Center for Creative Leadership - Coaching Research Reports',
+        'Resonance Executive Coaching - Internal Program Analysis'
+      ];
+
+      await pdfService.exportDashboard(dashboardData, {
+        title: 'Resonance Executive Coaching ROI Dashboard',
+        subtitle: 'Comprehensive Analysis of Coaching Program Performance',
+        includeLogo: true,
+        includeFootnotes: true,
+        sources,
+        author: 'Daniel Kimble'
+      });
+
+      toast({
+        title: "PDF Export Successful",
+        description: "Dashboard report has been downloaded successfully."
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (showWizard) {
@@ -54,6 +110,10 @@ export function Dashboard() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportDashboard}>
+            <Download className="h-4 w-4 mr-2" />
+            Export PDF
+          </Button>
           <Button onClick={() => setShowWizard(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Program

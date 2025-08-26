@@ -5,6 +5,8 @@ import { ArrowLeft, Download } from 'lucide-react';
 import { Program, Organization, Benefit } from '@/types/coaching';
 import { usePrograms } from '@/hooks/usePrograms';
 import { useBenefits } from '@/hooks/useBenefits';
+import { PDFExportService, ComparisonData } from '@/lib/pdf-export';
+import { useToast } from '@/hooks/use-toast';
 
 interface CompareViewProps {
   programIds: string[];
@@ -14,6 +16,7 @@ interface CompareViewProps {
 export function CompareView({ programIds, onBack }: CompareViewProps) {
   const { data: allPrograms = [] } = usePrograms();
   const programs = allPrograms.filter(program => programIds.includes(program.id));
+  const { toast } = useToast();
   
   // Fetch benefits for each program
   const benefitQueries = programIds.map(id => useBenefits(id));
@@ -41,6 +44,63 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
     return annualBenefits > 0 ? totalInvestment / annualBenefits : 0;
   };
 
+  const handleExportComparison = async () => {
+    try {
+      const pdfService = new PDFExportService();
+      
+      // Prepare calculations for each program
+      const calculations: Record<string, any> = {};
+      programs.forEach(program => {
+        const benefits = benefitsByProgram[program.id] || [];
+        const totalInvestment = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
+        const totalBenefits = benefits.reduce((sum, benefit) => 
+          sum + (benefit.annual_value * (benefit.attribution_percentage / 100)), 0
+        );
+        
+        calculations[program.id] = {
+          roi: calculateROI(program),
+          paybackPeriod: calculatePayback(program),
+          totalInvestment,
+          totalBenefits
+        };
+      });
+
+      const comparisonData: ComparisonData = {
+        programs,
+        benefits: benefitsByProgram,
+        calculations
+      };
+
+      const sources = [
+        'International Coaching Federation (ICF) - Global Coaching Study 2023',
+        'Harvard Business Review - The Case for Executive Coaching',
+        'Phillips, J. & Phillips, P. - ROI in Executive Coaching',
+        'Resonance Executive Coaching - Program Analysis Framework'
+      ];
+
+      await pdfService.exportComparison(comparisonData, {
+        title: 'Executive Coaching Program Comparison',
+        subtitle: `Analysis of ${programs.length} Coaching Programs`,
+        includeLogo: true,
+        includeFootnotes: true,
+        sources,
+        author: 'Daniel Kimble'
+      });
+
+      toast({
+        title: "PDF Export Successful",
+        description: "Program comparison report has been downloaded successfully."
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-8">
@@ -66,7 +126,7 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
             </p>
           </div>
         </div>
-        <Button>
+        <Button onClick={handleExportComparison}>
           <Download className="h-4 w-4 mr-2" />
           Export PDF
         </Button>

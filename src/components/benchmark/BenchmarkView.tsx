@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Users, Clock, DollarSign } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, Users, Clock, DollarSign, Download } from 'lucide-react';
 import { Benchmark } from '@/types/coaching';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PDFExportService } from '@/lib/pdf-export';
 
 export function BenchmarkView() {
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
@@ -36,6 +38,42 @@ export function BenchmarkView() {
     }
   };
 
+  const handleExportBenchmarks = async () => {
+    try {
+      const pdfService = new PDFExportService();
+
+      const sources = [
+        'International Coaching Federation (ICF) - Global Coaching Study 2023',
+        'Harvard Business Review - The Case for Executive Coaching',
+        'Center for Creative Leadership - Coaching Research Reports',
+        'Sherpa Coaching - Executive Coaching Survey 2023',
+        'Phillips, J. & Phillips, P. - ROI in Executive Coaching',
+        'MetrixGlobal LLC - Executive Coaching Impact Study'
+      ];
+
+      await pdfService.exportBenchmarks(benchmarks, {
+        title: 'Executive Coaching Industry Benchmarks',
+        subtitle: 'Comprehensive Analysis of Coaching Effectiveness Research',
+        includeLogo: true,
+        includeFootnotes: true,
+        sources,
+        author: 'Daniel Kimble'
+      });
+
+      toast({
+        title: "PDF Export Successful",
+        description: "Benchmarks report has been downloaded successfully."
+      });
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -48,11 +86,17 @@ export function BenchmarkView() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">Industry Benchmarks</h2>
-        <p className="text-muted-foreground">
-          Reference data from leading coaching effectiveness studies
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Industry Benchmarks</h2>
+          <p className="text-muted-foreground">
+            Reference data from leading coaching effectiveness studies
+          </p>
+        </div>
+        <Button onClick={handleExportBenchmarks} variant="outline">
+          <Download className="h-4 w-4 mr-2" />
+          Export PDF
+        </Button>
       </div>
 
       {/* Benchmark Cards */}
