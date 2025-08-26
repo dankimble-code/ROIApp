@@ -14,7 +14,219 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          timestamp: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          timestamp?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      benchmarks: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      benefits: {
+        Row: {
+          annual_value: number
+          attribution_percentage: number
+          category: string
+          confidence_level: number
+          created_at: string
+          description: string
+          id: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          annual_value: number
+          attribution_percentage: number
+          category: string
+          confidence_level: number
+          created_at?: string
+          description: string
+          id?: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          annual_value?: number
+          attribution_percentage?: number
+          category?: string
+          confidence_level?: number
+          created_at?: string
+          description?: string
+          id?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benefits_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          employee_count: number | null
+          id: string
+          industry: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_count?: number | null
+          id?: string
+          industry?: string | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_count?: number | null
+          id?: string
+          industry?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      programs: {
+        Row: {
+          cost_per_participant: number
+          created_at: string
+          duration_months: number
+          id: string
+          name: string
+          organization_id: string
+          overhead_costs: number | null
+          participants_count: number
+          updated_at: string
+        }
+        Insert: {
+          cost_per_participant: number
+          created_at?: string
+          duration_months: number
+          id?: string
+          name: string
+          organization_id: string
+          overhead_costs?: number | null
+          participants_count: number
+          updated_at?: string
+        }
+        Update: {
+          cost_per_participant?: number
+          created_at?: string
+          duration_months?: number
+          id?: string
+          name?: string
+          organization_id?: string
+          overhead_costs?: number | null
+          participants_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenarios: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_rate: number
+          id: string
+          is_baseline: boolean | null
+          name: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_rate?: number
+          id?: string
+          is_baseline?: boolean | null
+          name: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_rate?: number
+          id?: string
+          is_baseline?: boolean | null
+          name?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenarios_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
