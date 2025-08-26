@@ -145,6 +145,11 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">
               coaching programs created
             </p>
+            <div className="mt-2 p-2 bg-muted/50 rounded-sm">
+              <p className="text-xs text-muted-foreground">
+                <strong>How to estimate:</strong> Count each distinct coaching initiative or cohort you're planning or running
+              </p>
+            </div>
           </CardContent>
         </Card>
         
@@ -158,6 +163,11 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">
               across all programs
             </p>
+            <div className="mt-2 p-2 bg-muted/50 rounded-sm">
+              <p className="text-xs text-muted-foreground">
+                <strong>How to estimate:</strong> Industry average is 300-700%. Calculate as (Benefits - Investment) / Investment × 100%
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -171,6 +181,11 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">
               in coaching programs
             </p>
+            <div className="mt-2 p-2 bg-muted/50 rounded-sm">
+              <p className="text-xs text-muted-foreground">
+                <strong>How to estimate:</strong> Include coach fees, participant time costs, materials, and overhead expenses
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -184,6 +199,11 @@ export function Dashboard() {
             <p className="text-xs text-muted-foreground">
               total participants
             </p>
+            <div className="mt-2 p-2 bg-muted/50 rounded-sm">
+              <p className="text-xs text-muted-foreground">
+                <strong>How to estimate:</strong> Count individual executives or leaders receiving coaching across all programs
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
