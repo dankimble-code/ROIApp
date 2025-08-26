@@ -52,6 +52,9 @@ export default function Auth() {
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Executive Coaching ROI Calculator
             </h1>
+            <p className="text-lg text-muted-foreground font-medium">
+              by Daniel Kimble
+            </p>
             <p className="text-xl text-muted-foreground">
               Measure, analyze, and optimize your coaching program investments with precision
             </p>
