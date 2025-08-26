@@ -50,7 +50,7 @@ export default function Auth() {
         <div className="text-center lg:text-left space-y-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
-              Executive Coaching ROI Calculator
+              Resonance Executive Coaching ROI Dashboard
             </h1>
             <p className="text-lg text-muted-foreground font-medium">
               by Daniel Kimble
