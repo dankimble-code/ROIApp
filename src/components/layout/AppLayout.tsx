@@ -24,7 +24,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     );
   }
 
-  // Removed authentication requirement - allow access without login
+  // Redirect to auth if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
