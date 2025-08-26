@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Calculator, TrendingUp } from 'lucide-react';
+import { LogOut, TrendingUp } from 'lucide-react';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,20 +32,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       <header className="bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center min-h-16 py-2">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-primary rounded-lg">
-                  <Calculator className="h-6 w-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    Executive Coaching ROI Calculator
-                  </h1>
-                  <p className="text-sm text-muted-foreground bg-yellow-200 px-2 py-1 rounded">
-                    by Daniel Kimble
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png" 
+                alt="Resonance Executive Coaching" 
+                className="h-12 w-auto"
+              />
             </div>
 
             <div className="flex items-center space-x-4">
