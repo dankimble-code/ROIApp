@@ -7,7 +7,7 @@ import { ProgramWizard } from '@/components/wizard/ProgramWizard';
 import { ProgramList } from '@/components/programs/ProgramList';
 import { CompareView } from '@/components/compare/CompareView';
 import { BenchmarkView } from '@/components/benchmark/BenchmarkView';
-import { PDFExportService, DashboardData } from '@/lib/pdf-export';
+// import { PDFExportService, DashboardData } from '@/lib/pdf-export';
 import { usePrograms } from '@/hooks/usePrograms';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,8 +16,12 @@ export function Dashboard() {
   const [showCompare, setShowCompare] = useState(false);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   
+  console.log('Dashboard component rendering...');
+  
   const { data: programs = [] } = usePrograms();
   const { toast } = useToast();
+  
+  console.log('Programs data:', programs);
 
   const handleProgramCreated = () => {
     setShowWizard(false);
@@ -31,6 +35,13 @@ export function Dashboard() {
 
   const handleExportDashboard = async () => {
     try {
+      console.log('Attempting PDF export...');
+      toast({
+        title: "PDF Export",
+        description: "PDF export functionality is temporarily disabled for debugging."
+      });
+      
+      /* Temporarily commented out PDF export to isolate the issue
       const pdfService = new PDFExportService();
       
       // Calculate dashboard statistics
@@ -69,6 +80,7 @@ export function Dashboard() {
         title: "PDF Export Successful",
         description: "Dashboard report has been downloaded successfully."
       });
+      */
     } catch (error) {
       console.error('Export failed:', error);
       toast({

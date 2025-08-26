@@ -5,7 +5,7 @@ import { ArrowLeft, Download } from 'lucide-react';
 import { Program, Organization, Benefit } from '@/types/coaching';
 import { usePrograms } from '@/hooks/usePrograms';
 import { useBenefits } from '@/hooks/useBenefits';
-import { PDFExportService, ComparisonData } from '@/lib/pdf-export';
+// import { PDFExportService, ComparisonData } from '@/lib/pdf-export';
 import { useToast } from '@/hooks/use-toast';
 
 interface CompareViewProps {
@@ -46,50 +46,9 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
 
   const handleExportComparison = async () => {
     try {
-      const pdfService = new PDFExportService();
-      
-      // Prepare calculations for each program
-      const calculations: Record<string, any> = {};
-      programs.forEach(program => {
-        const benefits = benefitsByProgram[program.id] || [];
-        const totalInvestment = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
-        const totalBenefits = benefits.reduce((sum, benefit) => 
-          sum + (benefit.annual_value * (benefit.attribution_percentage / 100)), 0
-        );
-        
-        calculations[program.id] = {
-          roi: calculateROI(program),
-          paybackPeriod: calculatePayback(program),
-          totalInvestment,
-          totalBenefits
-        };
-      });
-
-      const comparisonData: ComparisonData = {
-        programs,
-        benefits: benefitsByProgram,
-        calculations
-      };
-
-      const sources = [
-        'International Coaching Federation (ICF) - Global Coaching Study 2023',
-        'Harvard Business Review - The Case for Executive Coaching',
-        'Phillips, J. & Phillips, P. - ROI in Executive Coaching',
-        'Resonance Executive Coaching - Program Analysis Framework'
-      ];
-
-      await pdfService.exportComparison(comparisonData, {
-        title: 'Executive Coaching Program Comparison',
-        subtitle: `Analysis of ${programs.length} Coaching Programs`,
-        includeLogo: true,
-        includeFootnotes: true,
-        sources,
-        author: 'Daniel Kimble'
-      });
-
       toast({
-        title: "PDF Export Successful",
-        description: "Program comparison report has been downloaded successfully."
+        title: "PDF Export",
+        description: "PDF export functionality is temporarily disabled for debugging."
       });
     } catch (error) {
       console.error('Export failed:', error);

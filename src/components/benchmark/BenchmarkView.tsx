@@ -6,7 +6,7 @@ import { TrendingUp, Users, Clock, DollarSign, Download } from 'lucide-react';
 import { Benchmark } from '@/types/coaching';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { PDFExportService } from '@/lib/pdf-export';
+// import { PDFExportService } from '@/lib/pdf-export';
 
 export function BenchmarkView() {
   const [benchmarks, setBenchmarks] = useState<Benchmark[]>([]);
@@ -40,29 +40,9 @@ export function BenchmarkView() {
 
   const handleExportBenchmarks = async () => {
     try {
-      const pdfService = new PDFExportService();
-
-      const sources = [
-        'International Coaching Federation (ICF) - Global Coaching Study 2023',
-        'Harvard Business Review - The Case for Executive Coaching',
-        'Center for Creative Leadership - Coaching Research Reports',
-        'Sherpa Coaching - Executive Coaching Survey 2023',
-        'Phillips, J. & Phillips, P. - ROI in Executive Coaching',
-        'MetrixGlobal LLC - Executive Coaching Impact Study'
-      ];
-
-      await pdfService.exportBenchmarks(benchmarks, {
-        title: 'Executive Coaching Industry Benchmarks',
-        subtitle: 'Comprehensive Analysis of Coaching Effectiveness Research',
-        includeLogo: true,
-        includeFootnotes: true,
-        sources,
-        author: 'Daniel Kimble'
-      });
-
       toast({
-        title: "PDF Export Successful",
-        description: "Benchmarks report has been downloaded successfully."
+        title: "PDF Export",
+        description: "PDF export functionality is temporarily disabled for debugging."
       });
     } catch (error) {
       console.error('Export failed:', error);
