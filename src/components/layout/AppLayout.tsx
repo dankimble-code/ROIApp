@@ -39,10 +39,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-foreground">
-                    Executive Coaching ROI
+                    Executive Coaching ROI Calculator
                   </h1>
-                  <p className="text-sm text-muted-foreground hidden sm:block">
-                    Advanced Analytics & Reporting
+                  <p className="text-sm text-muted-foreground">
+                    by Daniel Kimble
                   </p>
                 </div>
               </div>
