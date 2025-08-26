@@ -43,7 +43,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <h1 className="text-xl font-bold text-foreground">
                     Executive Coaching ROI Calculator
                   </h1>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground bg-yellow-200 px-2 py-1 rounded">
                     by Daniel Kimble
                   </p>
                 </div>
