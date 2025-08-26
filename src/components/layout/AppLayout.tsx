@@ -24,9 +24,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
+  // Removed authentication requirement - allow access without login
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,22 +49,26 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Avatar>
-                  <AvatarFallback>
-                    {user.email?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden sm:block">
-                  <p className="text-sm font-medium text-foreground">
-                    {user.email}
-                  </p>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" onClick={signOut}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
+              {user && (
+                <>
+                  <div className="flex items-center space-x-2">
+                    <Avatar>
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="hidden sm:block">
+                      <p className="text-sm font-medium text-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={signOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
