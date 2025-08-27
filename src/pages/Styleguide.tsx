@@ -278,6 +278,125 @@ export default function Styleguide() {
               </Table>
             </CardContent>
           </Card>
+
+          {/* Badges */}
+          <Card className="bg-surface border-border">
+            <CardHeader>
+              <CardTitle className="text-text">Badges</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="default">Default</Badge>
+                <Badge variant="secondary">Secondary</Badge>
+                <Badge variant="outline">Outline</Badge>
+                <Badge variant="destructive">Destructive</Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Color Showcase */}
+          <Card className="bg-surface border-border">
+            <CardHeader>
+              <CardTitle className="text-text">Semantic Color Tokens</CardTitle>
+              <CardDescription className="text-muted">
+                All components use these semantic tokens for consistent theming
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-bg border border-border"></div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Background</div>
+                    <div className="text-muted text-xs">--bg</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-surface border border-border"></div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Surface</div>
+                    <div className="text-muted text-xs">--surface</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-primary"></div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Primary</div>
+                    <div className="text-muted text-xs">--primary</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-secondary"></div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Secondary</div>
+                    <div className="text-muted text-xs">--secondary</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-accent"></div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Accent</div>
+                    <div className="text-muted text-xs">--accent</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded border border-border bg-surface"></div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Border</div>
+                    <div className="text-muted text-xs">--border</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-surface border border-border flex items-center justify-center">
+                    <span className="text-text font-medium">Text</span>
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Text</div>
+                    <div className="text-muted text-xs">--text</div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-16 rounded bg-surface border border-border flex items-center justify-center">
+                    <span className="text-muted font-medium">Muted</span>
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-medium text-text">Muted</div>
+                    <div className="text-muted text-xs">--muted</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Typography */}
+          <Card className="bg-surface border-border">
+            <CardHeader>
+              <CardTitle className="text-text">Typography</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h1 className="text-4xl font-bold text-text">Heading 1</h1>
+                <h2 className="text-3xl font-semibold text-text">Heading 2</h2>
+                <h3 className="text-2xl font-semibold text-text">Heading 3</h3>
+                <h4 className="text-xl font-semibold text-text">Heading 4</h4>
+                <p className="text-text">
+                  Body text with excellent readability and contrast. All text colors 
+                  pass WCAG AA requirements for accessibility.
+                </p>
+                <p className="text-muted">
+                  Muted text for secondary information, captions, and less important content.
+                </p>
+                <p className="text-sm text-muted">Small muted text for fine print and metadata.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center py-8">
+          <p className="text-muted text-sm">
+            All components use semantic tokens • WCAG AA compliant • No hardcoded colors
+          </p>
         </div>
       </div>
     </div>
