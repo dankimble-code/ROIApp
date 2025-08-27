@@ -5,3 +5,4 @@ export * from './useOrganizations';
 export * from './useBenchmarks';
 export * from './useAuditLogs';
 export * from './useROICalculation';
+export * from './useScenarios';

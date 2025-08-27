@@ -1,26 +1,249 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import { Benefit } from '@/types/coaching';
+import { useBenefits, useBenefitAttribution, useCreateBenefit, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
+import { BenefitForm } from '@/components/benefits/BenefitForm';
+import { Plus, Edit, Trash2, Info, TrendingUp } from 'lucide-react';
+import { formatCurrency, formatPercentage } from '@/lib/utils';
 
 interface BenefitsStepProps {
   data: Partial<Benefit>[];
   onChange: (data: Partial<Benefit>[]) => void;
   onNext: () => void;
   onBack: () => void;
+  programId?: string;
 }
 
-export function BenefitsStep({ data, onChange, onNext, onBack }: BenefitsStepProps) {
+export function BenefitsStep({ data, onChange, onNext, onBack, programId }: BenefitsStepProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
+  
+  const { data: benefits = [], isLoading } = useBenefits(programId);
+  const { data: attribution } = useBenefitAttribution(programId);
+  const createBenefit = useCreateBenefit();
+  const updateBenefit = useUpdateBenefit();
+  const deleteBenefit = useDeleteBenefit();
+
+  const handleCreateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!programId) return;
+    
+    createBenefit.mutate(
+      { ...benefitData, program_id: programId },
+      {
+        onSuccess: () => {
+          setShowForm(false);
+          onChange(benefits);
+        },
+      }
+    );
+  };
+
+  const handleUpdateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!editingBenefit) return;
+    
+    updateBenefit.mutate(
+      { 
+        id: editingBenefit.id, 
+        data: benefitData 
+      },
+      {
+        onSuccess: () => {
+          setEditingBenefit(null);
+          onChange(benefits);
+        },
+      }
+    );
+  };
+
+  const handleDeleteBenefit = (id: string) => {
+    deleteBenefit.mutate(id, {
+      onSuccess: () => {
+        onChange(benefits);
+      },
+    });
+  };
+
+  const totalAnnualValue = benefits.reduce((sum, benefit) => sum + benefit.annual_value, 0);
+  const totalAttributableValue = benefits.reduce((sum, benefit) => 
+    sum + (benefit.annual_value * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100)), 0
+  );
+
+  if (showForm) {
+    return (
+      <BenefitForm
+        onSubmit={handleCreateBenefit}
+        onCancel={() => setShowForm(false)}
+        availableAttribution={attribution?.remaining || 100}
+      />
+    );
+  }
+
+  if (editingBenefit) {
+    return (
+      <BenefitForm
+        benefit={editingBenefit}
+        onSubmit={handleUpdateBenefit}
+        onCancel={() => setEditingBenefit(null)}
+        availableAttribution={attribution?.remaining || 100}
+        isEditing
+      />
+    );
+  }
+
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">Benefits configuration coming soon...</p>
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Program Benefits
+            </CardTitle>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Benefit
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Attribution Overview */}
+          {attribution && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium">Attribution Overview</h4>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Total attribution to coaching across all benefits cannot exceed 100%</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Badge variant={attribution.remaining > 0 ? 'secondary' : 'outline'}>
+                  {formatPercentage(attribution.remaining)} available
+                </Badge>
+              </div>
+              <Progress value={attribution.total} className="h-2" />
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Used: {formatPercentage(attribution.total)}</span>
+                <span>Remaining: {formatPercentage(attribution.remaining)}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Benefits Summary */}
+          {benefits.length > 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold">{formatCurrency(totalAnnualValue)}</div>
+                  <p className="text-sm text-muted-foreground">Total Annual Value</p>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
+                  <p className="text-sm text-muted-foreground">Expected Impact</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Benefits List */}
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading benefits...</p>
+            </div>
+          ) : benefits.length === 0 ? (
+            <div className="text-center py-8">
+              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-medium mb-2">No benefits added yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Add benefits to calculate ROI projections for your coaching program.
+              </p>
+              <Button onClick={() => setShowForm(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Benefit
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {benefits.map((benefit) => {
+                const expectedImpact = benefit.annual_value * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100);
+                
+                return (
+                  <Card key={benefit.id} className="border-l-4 border-l-primary/20">
+                    <CardContent className="pt-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant="outline">{benefit.category}</Badge>
+                            <Badge variant="secondary">
+                              {formatPercentage(benefit.attribution_percentage)} attribution
+                            </Badge>
+                            <Badge variant={benefit.confidence_level >= 80 ? 'default' : 'outline'}>
+                              {formatPercentage(benefit.confidence_level)} confidence
+                            </Badge>
+                          </div>
+                          <p className="text-sm mb-3">{benefit.description}</p>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Annual Value:</span>
+                              <div className="font-medium">{formatCurrency(benefit.annual_value)}</div>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Expected Impact:</span>
+                              <div className="font-medium text-primary">{formatCurrency(expectedImpact)}</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingBenefit(benefit)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteBenefit(benefit.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+        <div className="flex justify-between pt-6">
+          <Button type="button" variant="outline" onClick={onBack}>
+            Previous
+          </Button>
+          <Button 
+            onClick={onNext}
+            disabled={benefits.length === 0}
+          >
+            Next Step
+          </Button>
         </div>
-        <div className="flex justify-between">
-          <Button type="button" variant="outline" onClick={onBack}>Previous</Button>
-          <Button onClick={onNext}>Next Step</Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 }

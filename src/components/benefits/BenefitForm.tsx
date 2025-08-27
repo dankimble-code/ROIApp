@@ -1,0 +1,303 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { BENEFIT_CATEGORIES, BenefitCategory, Benefit } from '@/types/coaching';
+import { Info, Plus, X } from 'lucide-react';
+import { formatCurrency, formatPercentage } from '@/lib/utils';
+
+interface BenefitFormProps {
+  benefit?: Partial<Benefit>;
+  onSubmit: (benefit: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => void;
+  onCancel: () => void;
+  availableAttribution: number;
+  isEditing?: boolean;
+}
+
+export function BenefitForm({ 
+  benefit, 
+  onSubmit, 
+  onCancel, 
+  availableAttribution,
+  isEditing = false 
+}: BenefitFormProps) {
+  const [category, setCategory] = useState<BenefitCategory>(benefit?.category as BenefitCategory || 'Productivity Gains');
+  const [description, setDescription] = useState(benefit?.description || '');
+  const [annualValue, setAnnualValue] = useState(benefit?.annual_value?.toString() || '');
+  const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 10]);
+  const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
+
+  const maxAttribution = isEditing ? 
+    availableAttribution + (benefit?.attribution_percentage || 0) : 
+    availableAttribution;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const annualValueNum = parseFloat(annualValue);
+    if (isNaN(annualValueNum) || annualValueNum <= 0) {
+      return;
+    }
+
+    if (attribution[0] > maxAttribution) {
+      return;
+    }
+
+    onSubmit({
+      program_id: benefit?.program_id || '',
+      category,
+      description,
+      annual_value: annualValueNum,
+      attribution_percentage: attribution[0],
+      confidence_level: confidence[0],
+    });
+  };
+
+  const getBenefitTemplate = (category: BenefitCategory) => {
+    const templates = {
+      'Productivity Gains': {
+        description: 'Increased productivity from improved focus and time management skills',
+        value: 50000,
+        attribution: 15,
+      },
+      'Leadership Development': {
+        description: 'Enhanced leadership capabilities leading to better team performance',
+        value: 75000,
+        attribution: 20,
+      },
+      'Retention Improvement': {
+        description: 'Reduced turnover costs through improved employee satisfaction',
+        value: 40000,
+        attribution: 12,
+      },
+      'Performance Enhancement': {
+        description: 'Improved individual and team performance metrics',
+        value: 60000,
+        attribution: 18,
+      },
+      'Decision Making': {
+        description: 'Better decision-making leading to cost savings and opportunities',
+        value: 35000,
+        attribution: 10,
+      },
+      'Team Effectiveness': {
+        description: 'Improved collaboration and team dynamics',
+        value: 45000,
+        attribution: 14,
+      },
+      'Innovation': {
+        description: 'Increased innovation and creative problem-solving',
+        value: 80000,
+        attribution: 25,
+      },
+      'Customer Satisfaction': {
+        description: 'Improved customer relationships and satisfaction scores',
+        value: 55000,
+        attribution: 16,
+      },
+      'Other': {
+        description: 'Custom benefit specific to your organization',
+        value: 30000,
+        attribution: 10,
+      },
+    };
+    return templates[category];
+  };
+
+  const applyTemplate = () => {
+    const template = getBenefitTemplate(category);
+    setDescription(template.description);
+    setAnnualValue(template.value.toString());
+    setAttribution([Math.min(template.attribution, maxAttribution)]);
+  };
+
+  return (
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            {isEditing ? 'Edit Benefit' : 'Add New Benefit'}
+            <Button variant="ghost" size="sm" onClick={onCancel}>
+              <X className="h-4 w-4" />
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Category Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="category">Benefit Category</Label>
+              <div className="flex gap-2">
+                <Select value={category} onValueChange={(value) => setCategory(value as BenefitCategory)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BENEFIT_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="outline" onClick={applyTemplate}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Use Template
+                </Button>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Describe how coaching will deliver this benefit..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                rows={3}
+              />
+            </div>
+
+            {/* Annual Value */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="annualValue">Annual Value</Label>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-3 w-3 text-muted-foreground" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expected annual monetary value of this benefit</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                id="annualValue"
+                type="number"
+                placeholder="50000"
+                value={annualValue}
+                onChange={(e) => setAnnualValue(e.target.value)}
+                required
+                min="0"
+              />
+              {annualValue && !isNaN(parseFloat(annualValue)) && (
+                <p className="text-sm text-muted-foreground">
+                  {formatCurrency(parseFloat(annualValue))} per year
+                </p>
+              )}
+            </div>
+
+            {/* Attribution Percentage */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label>Attribution to Coaching</Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>What percentage of this benefit can be attributed to coaching?</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Badge variant="outline">
+                  {formatPercentage(attribution[0])}
+                </Badge>
+              </div>
+              <Slider
+                value={attribution}
+                onValueChange={setAttribution}
+                max={maxAttribution}
+                min={1}
+                step={1}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1%</span>
+                <span>Available: {formatPercentage(maxAttribution)}</span>
+              </div>
+              {attribution[0] > maxAttribution && (
+                <p className="text-sm text-destructive">
+                  Exceeds available attribution ({formatPercentage(maxAttribution)})
+                </p>
+              )}
+            </div>
+
+            {/* Confidence Level */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Label>Confidence Level</Label>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Info className="h-3 w-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>How confident are you that this benefit will be achieved?</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Badge variant={confidence[0] >= 80 ? 'default' : confidence[0] >= 60 ? 'secondary' : 'outline'}>
+                  {formatPercentage(confidence[0])}
+                </Badge>
+              </div>
+              <Slider
+                value={confidence}
+                onValueChange={setConfidence}
+                max={100}
+                min={10}
+                step={5}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Low (10%)</span>
+                <span>High (100%)</span>
+              </div>
+            </div>
+
+            {/* Expected Impact Preview */}
+            {annualValue && !isNaN(parseFloat(annualValue)) && (
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Expected Annual Impact:</span>
+                    <span className="font-bold text-primary">
+                      {formatCurrency(
+                        parseFloat(annualValue) * (attribution[0] / 100) * (confidence[0] / 100)
+                      )}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(parseFloat(annualValue))} × {formatPercentage(attribution[0])} attribution × {formatPercentage(confidence[0])} confidence
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={!description || !annualValue || attribution[0] > maxAttribution}
+              >
+                {isEditing ? 'Update Benefit' : 'Add Benefit'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </TooltipProvider>
+  );
+}
