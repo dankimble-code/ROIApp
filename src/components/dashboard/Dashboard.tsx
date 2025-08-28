@@ -33,21 +33,6 @@ export function Dashboard() {
   const [showCompare, setShowCompare] = useState(false);
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
 
-  const { data: programs = [], isLoading } = usePrograms();
-
-  // Calculate real dashboard statistics
-  const totalPrograms = programs.length;
-  const totalParticipants = programs.reduce((sum, program) => sum + program.participants_count, 0);
-  const totalInvestment = programs.reduce((sum, program) => 
-    sum + (program.cost_per_participant * program.participants_count) + program.overhead_costs, 0
-  );
-
-  // For now, use simplified stats until we can properly implement program-specific ROI without hook violations
-  const averageROI = 425; // Industry average - will be calculated properly when individual program views are implemented
-  
-  // Simplified program data for now - avoiding hook rule violations  
-  const programsWithROI: any[] = []; // Will be populated properly in individual program detail views
-
   const handleExportPDF = () => {
     // exportToPDF(); // TODO: Implement PDF export
     console.log('PDF export not yet implemented');
@@ -76,6 +61,31 @@ export function Dashboard() {
     );
   }
 
+  return <DashboardContent onShowWizard={() => setShowWizard(true)} onCompare={handleCompare} onExportPDF={handleExportPDF} />;
+}
+
+interface DashboardContentProps {
+  onShowWizard: () => void;
+  onCompare: (programIds: string[]) => void;
+  onExportPDF: () => void;
+}
+
+function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardContentProps) {
+  const { data: programs = [], isLoading } = usePrograms();
+
+  // Calculate real dashboard statistics
+  const totalPrograms = programs.length;
+  const totalParticipants = programs.reduce((sum, program) => sum + program.participants_count, 0);
+  const totalInvestment = programs.reduce((sum, program) => 
+    sum + (program.cost_per_participant * program.participants_count) + program.overhead_costs, 0
+  );
+
+  // For now, use simplified stats until we can properly implement program-specific ROI without hook violations
+  const averageROI = 425; // Industry average - will be calculated properly when individual program views are implemented
+  
+  // Simplified program data for now - avoiding hook rule violations  
+  const programsWithROI: any[] = []; // Will be populated properly in individual program detail views
+
   return (
     <TooltipProvider>
       <div className="space-y-8">
@@ -88,11 +98,11 @@ export function Dashboard() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportPDF}>
+            <Button variant="outline" onClick={onExportPDF}>
               <FileDown className="mr-2 h-4 w-4" />
               Export PDF
             </Button>
-            <Button onClick={() => setShowWizard(true)}>
+            <Button onClick={onShowWizard}>
               <Plus className="mr-2 h-4 w-4" />
               New Program
             </Button>
@@ -217,7 +227,7 @@ export function Dashboard() {
           </TabsList>
 
           <TabsContent value="programs" className="space-y-4">
-            <ProgramList onCompare={handleCompare} />
+            <ProgramList onCompare={onCompare} />
           </TabsContent>
 
           <TabsContent value="benchmarks" className="space-y-4">
@@ -231,7 +241,7 @@ export function Dashboard() {
               <p className="text-muted-foreground mb-4">
                 Select programs from the Programs tab to compare their ROI and performance metrics.
               </p>
-              <Button variant="outline" onClick={() => setSelectedProgramIds([])}>
+              <Button variant="outline">
                 Go to Programs
               </Button>
             </div>
