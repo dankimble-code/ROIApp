@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Eye, Copy, Trash2, FileText } from 'lucide-react';
+import { ProgramDetailView } from './ProgramDetailView';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ interface ProgramListProps {
 
 export function ProgramList({ onCompare }: ProgramListProps) {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [viewingProgram, setViewingProgram] = useState<string | null>(null);
   
   const { data: programs = [], isLoading } = usePrograms();
   const deleteProgram = useDeleteProgram();
@@ -29,6 +31,10 @@ export function ProgramList({ onCompare }: ProgramListProps) {
 
   const handleDelete = (programId: string) => {
     deleteProgram.mutate(programId);
+  };
+
+  const handleViewDetails = (programId: string) => {
+    setViewingProgram(programId);
   };
 
   const toggleProgramSelection = (programId: string) => {
@@ -44,6 +50,19 @@ export function ProgramList({ onCompare }: ProgramListProps) {
       }
     });
   };
+
+  // Show program detail view if one is selected
+  if (viewingProgram) {
+    const program = programs.find(p => p.id === viewingProgram);
+    if (program) {
+      return (
+        <ProgramDetailView 
+          program={program}
+          onBack={() => setViewingProgram(null)}
+        />
+      );
+    }
+  }
 
   if (isLoading) {
     return (
@@ -129,7 +148,10 @@ export function ProgramList({ onCompare }: ProgramListProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(program.id);
+                      }}>
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem>

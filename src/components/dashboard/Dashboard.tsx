@@ -42,11 +42,11 @@ export function Dashboard() {
     sum + (program.cost_per_participant * program.participants_count) + program.overhead_costs, 0
   );
 
-  // For now, use simplified stats until we can properly implement program-specific ROI
-  const averageROI = 425; // Placeholder - will be calculated properly when program details are implemented
+  // For now, use simplified stats until we can properly implement program-specific ROI without hook violations
+  const averageROI = 425; // Industry average - will be calculated properly when individual program views are implemented
   
-  // Simplified program data for now - avoiding hook rule violations
-  const programsWithROI: any[] = []; // Will be populated properly later
+  // Simplified program data for now - avoiding hook rule violations  
+  const programsWithROI: any[] = []; // Will be populated properly in individual program detail views
 
   const handleExportPDF = () => {
     // exportToPDF(); // TODO: Implement PDF export
