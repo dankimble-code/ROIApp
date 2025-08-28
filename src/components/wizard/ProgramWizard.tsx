@@ -98,6 +98,7 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
             onChange={setBenefits}
             onNext={handleNext}
             onBack={handleBack}
+            participantCount={program.participants_count || 1}
           />
         );
       case 4:

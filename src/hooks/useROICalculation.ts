@@ -12,9 +12,9 @@ export function useROICalculation(
     const totalProgramCost = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
     const annualCosts = totalProgramCost / program.duration_months * 12;
     
-    // Calculate total annual benefits with attribution
+    // Calculate total annual benefits with attribution (benefits are stored per participant)
     const totalAnnualBenefits = benefits.reduce((sum, benefit) => {
-      return sum + (benefit.annual_value * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100));
+      return sum + (benefit.annual_value * program.participants_count * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100));
     }, 0);
 
     const discountRate = scenario.discount_rate;

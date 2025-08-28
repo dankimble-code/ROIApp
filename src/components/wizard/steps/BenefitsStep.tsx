@@ -17,9 +17,10 @@ interface BenefitsStepProps {
   onNext: () => void;
   onBack: () => void;
   programId?: string;
+  participantCount?: number;
 }
 
-export function BenefitsStep({ data, onChange, onNext, onBack, programId }: BenefitsStepProps) {
+export function BenefitsStep({ data, onChange, onNext, onBack, programId, participantCount = 1 }: BenefitsStepProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
   
@@ -68,9 +69,9 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId }: Bene
     });
   };
 
-  const totalAnnualValue = benefits.reduce((sum, benefit) => sum + benefit.annual_value, 0);
+  const totalAnnualValue = benefits.reduce((sum, benefit) => sum + benefit.annual_value * participantCount, 0);
   const totalAttributableValue = benefits.reduce((sum, benefit) => 
-    sum + (benefit.annual_value * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100)), 0
+    sum + (benefit.annual_value * participantCount * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100)), 0
   );
 
   if (showForm) {
@@ -79,6 +80,7 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId }: Bene
         onSubmit={handleCreateBenefit}
         onCancel={() => setShowForm(false)}
         availableAttribution={attribution?.remaining || 100}
+        participantCount={participantCount}
       />
     );
   }
@@ -90,6 +92,7 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId }: Bene
         onSubmit={handleUpdateBenefit}
         onCancel={() => setEditingBenefit(null)}
         availableAttribution={attribution?.remaining || 100}
+        participantCount={participantCount}
         isEditing
       />
     );
@@ -144,13 +147,19 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId }: Bene
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
                   <div className="text-2xl font-bold">{formatCurrency(totalAnnualValue)}</div>
-                  <p className="text-sm text-muted-foreground">Total Annual Value</p>
+                  <p className="text-sm text-muted-foreground">Total Annual Value (All Participants)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Per participant: {formatCurrency(totalAnnualValue / participantCount)}
+                  </p>
                 </CardContent>
               </Card>
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
                   <div className="text-2xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
-                  <p className="text-sm text-muted-foreground">Expected Impact</p>
+                  <p className="text-sm text-muted-foreground">Expected Impact (All Participants)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Per participant: {formatCurrency(totalAttributableValue / participantCount)}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -198,12 +207,14 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId }: Bene
                           <p className="text-sm mb-3">{benefit.description}</p>
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Annual Value:</span>
+                              <span className="text-muted-foreground">Per Participant:</span>
                               <div className="font-medium">{formatCurrency(benefit.annual_value)}</div>
+                              <span className="text-xs text-muted-foreground">Total: {formatCurrency(benefit.annual_value * participantCount)}</span>
                             </div>
                             <div>
                               <span className="text-muted-foreground">Expected Impact:</span>
                               <div className="font-medium text-primary">{formatCurrency(expectedImpact)}</div>
+                              <span className="text-xs text-muted-foreground">Total: {formatCurrency(expectedImpact * participantCount)}</span>
                             </div>
                           </div>
                         </div>

@@ -18,6 +18,7 @@ interface BenefitFormProps {
   onCancel: () => void;
   availableAttribution: number;
   isEditing?: boolean;
+  participantCount?: number;
 }
 
 export function BenefitForm({ 
@@ -25,7 +26,8 @@ export function BenefitForm({
   onSubmit, 
   onCancel, 
   availableAttribution,
-  isEditing = false 
+  isEditing = false,
+  participantCount = 1
 }: BenefitFormProps) {
   const [category, setCategory] = useState<BenefitCategory>(benefit?.category as BenefitCategory || 'Productivity Gains');
   const [description, setDescription] = useState(benefit?.description || '');
@@ -62,48 +64,48 @@ export function BenefitForm({
   const getBenefitTemplate = (category: BenefitCategory) => {
     const templates = {
       'Productivity Gains': {
-        description: 'Increased productivity from improved focus and time management skills',
-        value: 50000,
+        description: 'Increased productivity from improved focus and time management skills per participant',
+        value: 2500,
         attribution: 15,
       },
       'Leadership Development': {
-        description: 'Enhanced leadership capabilities leading to better team performance',
-        value: 75000,
+        description: 'Enhanced leadership capabilities per participant leading to better team performance',
+        value: 3750,
         attribution: 20,
       },
       'Retention Improvement': {
-        description: 'Reduced turnover costs through improved employee satisfaction',
-        value: 40000,
+        description: 'Reduced turnover costs per participant through improved employee satisfaction',
+        value: 2000,
         attribution: 12,
       },
       'Performance Enhancement': {
-        description: 'Improved individual and team performance metrics',
-        value: 60000,
+        description: 'Improved individual performance metrics per participant',
+        value: 3000,
         attribution: 18,
       },
       'Decision Making': {
-        description: 'Better decision-making leading to cost savings and opportunities',
-        value: 35000,
+        description: 'Better decision-making per participant leading to cost savings and opportunities',
+        value: 1750,
         attribution: 10,
       },
       'Team Effectiveness': {
-        description: 'Improved collaboration and team dynamics',
-        value: 45000,
+        description: 'Improved collaboration and team dynamics per participant',
+        value: 2250,
         attribution: 14,
       },
       'Innovation': {
-        description: 'Increased innovation and creative problem-solving',
-        value: 80000,
+        description: 'Increased innovation and creative problem-solving per participant',
+        value: 4000,
         attribution: 25,
       },
       'Customer Satisfaction': {
-        description: 'Improved customer relationships and satisfaction scores',
-        value: 55000,
+        description: 'Improved customer relationships and satisfaction scores per participant',
+        value: 2750,
         attribution: 16,
       },
       'Other': {
-        description: 'Custom benefit specific to your organization',
-        value: 30000,
+        description: 'Custom benefit specific to your organization per participant',
+        value: 1500,
         attribution: 10,
       },
     };
@@ -166,32 +168,37 @@ export function BenefitForm({
               />
             </div>
 
-            {/* Annual Value */}
+            {/* Annual Value Per Participant */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="annualValue">Annual Value</Label>
+                <Label htmlFor="annualValue">Annual Value Per Participant</Label>
                 <Tooltip>
                   <TooltipTrigger>
                     <Info className="h-3 w-3 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Expected annual monetary value of this benefit</p>
+                    <p>Expected annual monetary value of this benefit per participant</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
               <Input
                 id="annualValue"
                 type="number"
-                placeholder="50000"
+                placeholder="2500"
                 value={annualValue}
                 onChange={(e) => setAnnualValue(e.target.value)}
                 required
                 min="0"
               />
               {annualValue && !isNaN(parseFloat(annualValue)) && (
-                <p className="text-sm text-muted-foreground">
-                  {formatCurrency(parseFloat(annualValue))} per year
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    Per participant: {formatCurrency(parseFloat(annualValue))} per year
+                  </p>
+                  <p className="text-sm font-medium text-primary">
+                    Total program: {formatCurrency(parseFloat(annualValue) * participantCount)} per year
+                  </p>
+                </div>
               )}
             </div>
 
@@ -268,17 +275,32 @@ export function BenefitForm({
             {annualValue && !isNaN(parseFloat(annualValue)) && (
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Expected Annual Impact:</span>
-                    <span className="font-bold text-primary">
-                      {formatCurrency(
-                        parseFloat(annualValue) * (attribution[0] / 100) * (confidence[0] / 100)
-                      )}
-                    </span>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">Expected Annual Impact:</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-xs text-muted-foreground">Per Participant:</span>
+                        <div className="font-bold text-primary">
+                          {formatCurrency(
+                            parseFloat(annualValue) * (attribution[0] / 100) * (confidence[0] / 100)
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground">Total Program:</span>
+                        <div className="font-bold text-primary">
+                          {formatCurrency(
+                            parseFloat(annualValue) * participantCount * (attribution[0] / 100) * (confidence[0] / 100)
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {formatCurrency(parseFloat(annualValue))} × {participantCount} participants × {formatPercentage(attribution[0])} attribution × {formatPercentage(confidence[0])} confidence
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatCurrency(parseFloat(annualValue))} × {formatPercentage(attribution[0])} attribution × {formatPercentage(confidence[0])} confidence
-                  </p>
                 </CardContent>
               </Card>
             )}
