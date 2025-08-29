@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
+import resonanceLogo from '@/assets/resonance-logo.png';
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
@@ -48,6 +49,13 @@ export default function Auth() {
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-6">
+          <div className="flex justify-center lg:justify-start mb-6">
+            <img 
+              src={resonanceLogo} 
+              alt="Resonance Executive Coaching" 
+              className="h-16 w-auto"
+            />
+          </div>
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tight text-foreground">
               Resonance Executive Coaching ROI Dashboard
