@@ -150,7 +150,7 @@ export function BenefitForm({
                 </Select>
                 <Button type="button" variant="outline" onClick={applyTemplate}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Use Template
+                  Use Default Definition
                 </Button>
               </div>
             </div>
