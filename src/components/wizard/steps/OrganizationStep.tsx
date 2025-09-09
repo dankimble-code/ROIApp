@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Organization } from '@/types/coaching';
+import { useToast } from '@/hooks/use-toast';
 
 interface OrganizationStepProps {
   data: Partial<Organization>;
@@ -12,8 +13,20 @@ interface OrganizationStepProps {
 }
 
 export function OrganizationStep({ data, onChange, onNext }: OrganizationStepProps) {
+  const { toast } = useToast();
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!data.employee_count || data.employee_count <= 0) {
+      toast({
+        title: "Employee Count Required",
+        description: "Please enter the number of employees in your organization.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     onNext();
   };
 
@@ -40,12 +53,14 @@ export function OrganizationStep({ data, onChange, onNext }: OrganizationStepPro
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="employee_count">Employee Count</Label>
+              <Label htmlFor="employee_count">Employee Count *</Label>
               <Input
                 id="employee_count"
                 type="number"
                 value={data.employee_count || ''}
                 onChange={(e) => onChange({ ...data, employee_count: parseInt(e.target.value) || 0 })}
+                required
+                min="1"
               />
             </div>
           </div>

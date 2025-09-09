@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,13 @@ interface ProgramStepProps {
 }
 
 export function ProgramStep({ data, onChange, onNext, onBack }: ProgramStepProps) {
+  // Set default cost per participant if not already set
+  useEffect(() => {
+    if (!data.cost_per_participant) {
+      onChange({ ...data, cost_per_participant: 10000 });
+    }
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onNext();
@@ -56,7 +64,7 @@ export function ProgramStep({ data, onChange, onNext, onBack }: ProgramStepProps
               <Input
                 id="cost_per_participant"
                 type="number"
-                value={data.cost_per_participant || ''}
+                value={data.cost_per_participant || 10000}
                 onChange={(e) => onChange({ ...data, cost_per_participant: parseFloat(e.target.value) || 0 })}
                 required
               />
