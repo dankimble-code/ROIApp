@@ -99,6 +99,8 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
             onNext={handleNext}
             onBack={handleBack}
             participantCount={program.participants_count || 1}
+            organization={organization}
+            program={program}
           />
         );
       case 4:

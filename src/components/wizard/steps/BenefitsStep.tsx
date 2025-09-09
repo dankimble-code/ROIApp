@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,9 +19,12 @@ interface BenefitsStepProps {
   onBack: () => void;
   programId?: string;
   participantCount?: number;
+  organization?: any;
+  program?: any;
 }
 
-export function BenefitsStep({ data, onChange, onNext, onBack, programId, participantCount = 1 }: BenefitsStepProps) {
+export function BenefitsStep({ data, onChange, onNext, onBack, programId, participantCount = 1, organization, program }: BenefitsStepProps) {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
   
@@ -107,7 +111,11 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
               <TrendingUp className="h-5 w-5" />
               Program Benefits
             </CardTitle>
-            <Button onClick={() => setShowForm(true)}>
+            <Button onClick={() => {
+              navigate('/benefits', {
+                state: { organization, program }
+              });
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Benefit
             </Button>
@@ -180,7 +188,11 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
               <p className="text-muted-foreground mb-4">
                 Add benefits to calculate ROI projections for your coaching program.
               </p>
-              <Button onClick={() => setShowForm(true)}>
+              <Button onClick={() => {
+                navigate('/benefits', {
+                  state: { organization, program }
+                });
+              }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Benefit
               </Button>
@@ -247,10 +259,13 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
             Previous
           </Button>
           <Button 
-            onClick={onNext}
-            disabled={benefits.length === 0}
+            onClick={() => {
+              navigate('/benefits', {
+                state: { organization, program }
+              });
+            }}
           >
-            Next Step
+            Add Benefits
           </Button>
         </div>
         </CardContent>
