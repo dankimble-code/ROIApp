@@ -65,47 +65,47 @@ export function BenefitForm({
     const templates = {
       'Productivity Gains': {
         description: 'Increased productivity from improved focus and time management skills per participant',
-        value: 2500,
+        value: 10000,
         attribution: 15,
       },
       'Leadership Development': {
         description: 'Enhanced leadership capabilities per participant leading to better team performance',
-        value: 3750,
+        value: 10000,
         attribution: 20,
       },
       'Retention Improvement': {
         description: 'Reduced turnover costs per participant through improved employee satisfaction',
-        value: 2000,
+        value: 100000,
         attribution: 12,
       },
       'Performance Enhancement': {
         description: 'Improved individual performance metrics per participant',
-        value: 3000,
+        value: 10000,
         attribution: 18,
       },
       'Decision Making': {
         description: 'Better decision-making per participant leading to cost savings and opportunities',
-        value: 1750,
+        value: 10000,
         attribution: 10,
       },
       'Team Effectiveness': {
         description: 'Improved collaboration and team dynamics per participant',
-        value: 2250,
+        value: 10000,
         attribution: 14,
       },
       'Innovation': {
         description: 'Increased innovation and creative problem-solving per participant',
-        value: 4000,
+        value: 10000,
         attribution: 25,
       },
       'Customer Satisfaction': {
         description: 'Improved customer relationships and satisfaction scores per participant',
-        value: 2750,
+        value: 10000,
         attribution: 16,
       },
       'Other': {
         description: 'Custom benefit specific to your organization per participant',
-        value: 1500,
+        value: 10000,
         attribution: 10,
       },
     };
@@ -184,7 +184,7 @@ export function BenefitForm({
               <Input
                 id="annualValue"
                 type="number"
-                placeholder="2500"
+                placeholder="10000"
                 value={annualValue}
                 onChange={(e) => setAnnualValue(e.target.value)}
                 required
