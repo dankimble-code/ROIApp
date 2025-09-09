@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { BenefitForm } from '@/components/benefits/BenefitForm';
 import { Plus, Edit, Trash2, Info, TrendingUp, ArrowLeft, Calculator } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
-import { Benefit } from '@/types/coaching';
+import { Benefit, BenefitCategory } from '@/types/coaching';
 
 interface BenefitsPageState {
   organization: any;
@@ -29,9 +29,10 @@ export default function Benefits() {
   const program = state?.program || {};
   const participantCount = program.participants_count || 1;
 
-  // Attribution tracking (simplified for now)
+  // Attribution tracking and used categories
   const totalAttribution = benefits.reduce((sum, benefit) => sum + (benefit.attribution_percentage || 0), 0);
   const availableAttribution = Math.max(0, 100 - totalAttribution);
+  const usedCategories = benefits.map(benefit => benefit.category).filter(Boolean) as BenefitCategory[];
 
   const handleCreateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
     const newBenefit = {
@@ -92,6 +93,7 @@ export default function Benefits() {
           onCancel={() => setShowForm(false)}
           availableAttribution={availableAttribution}
           participantCount={participantCount}
+          usedCategories={usedCategories}
         />
       </div>
     );
@@ -136,10 +138,10 @@ export default function Benefits() {
                 <TrendingUp className="h-5 w-5" />
                 Expected Benefits & Outcomes
               </CardTitle>
-              <Button onClick={() => setShowForm(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Benefit
-              </Button>
+            <Button onClick={() => setShowForm(true)} disabled={usedCategories.length >= 9}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Benefit
+            </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -202,10 +204,10 @@ export default function Benefits() {
                 <p className="text-muted-foreground mb-4">
                   Add benefits to calculate ROI projections for your coaching program.
                 </p>
-                <Button onClick={() => setShowForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Benefit
-                </Button>
+              <Button onClick={() => setShowForm(true)} disabled={usedCategories.length >= 9}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Benefit
+              </Button>
               </div>
             ) : (
               <div className="space-y-4">

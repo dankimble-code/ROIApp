@@ -19,6 +19,7 @@ interface BenefitFormProps {
   availableAttribution: number;
   isEditing?: boolean;
   participantCount?: number;
+  usedCategories?: BenefitCategory[];
 }
 
 export function BenefitForm({ 
@@ -27,7 +28,8 @@ export function BenefitForm({
   onCancel, 
   availableAttribution,
   isEditing = false,
-  participantCount = 1
+  participantCount = 1,
+  usedCategories = []
 }: BenefitFormProps) {
   const [category, setCategory] = useState<BenefitCategory>(benefit?.category as BenefitCategory || 'Productivity Gains');
   const [description, setDescription] = useState(benefit?.description || '');
@@ -38,6 +40,11 @@ export function BenefitForm({
   const maxAttribution = isEditing ? 
     availableAttribution + (benefit?.attribution_percentage || 0) : 
     availableAttribution;
+
+  // Filter out used categories unless editing the current benefit
+  const availableCategories = BENEFIT_CATEGORIES.filter(cat => 
+    !usedCategories.includes(cat) || (isEditing && cat === benefit?.category)
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,14 +148,19 @@ export function BenefitForm({
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {BENEFIT_CATEGORIES.map((cat) => (
+                    {availableCategories.map((cat) => (
                       <SelectItem key={cat} value={cat}>
                         {cat}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button type="button" variant="outline" onClick={applyTemplate}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={applyTemplate}
+                  disabled={!category || !availableCategories.includes(category)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Use Default Definition
                 </Button>
