@@ -75,7 +75,7 @@ export function BenefitForm({
       },
       'Retention Improvement': {
         description: 'Reduced turnover costs per participant through improved employee satisfaction',
-        value: 100000,
+        value: 15000,
         attribution: 12,
       },
       'Performance Enhancement': {
