@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
-import resonanceLogo from '@/assets/resonance-logo.png';
+// Using the correct logo from uploads
+const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
 
 export default function Auth() {
   const { user, signIn, signUp, loading } = useAuth();
