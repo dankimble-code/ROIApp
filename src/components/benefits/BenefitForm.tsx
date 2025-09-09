@@ -32,7 +32,7 @@ export function BenefitForm({
   const [category, setCategory] = useState<BenefitCategory>(benefit?.category as BenefitCategory || 'Productivity Gains');
   const [description, setDescription] = useState(benefit?.description || '');
   const [annualValue, setAnnualValue] = useState(benefit?.annual_value?.toString() || '');
-  const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 10]);
+  const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 50]);
   const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
 
   const maxAttribution = isEditing ? 
@@ -66,47 +66,47 @@ export function BenefitForm({
       'Productivity Gains': {
         description: 'Increased productivity from improved focus and time management skills per participant',
         value: 10000,
-        attribution: 15,
+        attribution: 50,
       },
       'Leadership Development': {
         description: 'Enhanced leadership capabilities per participant leading to better team performance',
         value: 10000,
-        attribution: 20,
+        attribution: 50,
       },
       'Retention Improvement': {
         description: 'Reduced turnover costs per participant through improved employee satisfaction',
         value: 15000,
-        attribution: 12,
+        attribution: 50,
       },
       'Performance Enhancement': {
         description: 'Improved individual performance metrics per participant',
         value: 10000,
-        attribution: 18,
+        attribution: 50,
       },
       'Decision Making': {
         description: 'Better decision-making per participant leading to cost savings and opportunities',
         value: 10000,
-        attribution: 10,
+        attribution: 50,
       },
       'Team Effectiveness': {
         description: 'Improved collaboration and team dynamics per participant',
         value: 10000,
-        attribution: 14,
+        attribution: 50,
       },
       'Innovation': {
         description: 'Increased innovation and creative problem-solving per participant',
         value: 10000,
-        attribution: 25,
+        attribution: 50,
       },
       'Customer Satisfaction': {
         description: 'Improved customer relationships and satisfaction scores per participant',
         value: 10000,
-        attribution: 16,
+        attribution: 50,
       },
       'Other': {
         description: 'Custom benefit specific to your organization per participant',
         value: 10000,
-        attribution: 10,
+        attribution: 50,
       },
     };
     return templates[category];
