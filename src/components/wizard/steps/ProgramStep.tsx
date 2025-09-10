@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { HelpCircle } from 'lucide-react';
 import { Program } from '@/types/coaching';
 
 interface ProgramStepProps {
@@ -70,7 +72,43 @@ export function ProgramStep({ data, onChange, onNext, onBack }: ProgramStepProps
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="overhead_costs">Overhead Costs ($)</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="overhead_costs">Overhead Costs ($)</Label>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button 
+                      type="button" 
+                      className="text-primary hover:text-primary/80 text-sm underline flex items-center gap-1"
+                    >
+                      (Guidance)
+                      <HelpCircle className="w-3 h-3" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Overhead Costs Guidance</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 text-sm">
+                      <p>
+                        Admin and overhead costs capture the indirect but real expenses associated with running an executive coaching program. They are not the coaching fees themselves, but the additional resources your organization invests to make the program successful. Examples include:
+                      </p>
+                      <ul className="list-disc pl-6 space-y-2">
+                        <li><strong>Administrative support time:</strong> Scheduling coaching sessions, handling calendar coordination, or managing program logistics.</li>
+                        <li><strong>Internal program management:</strong> Time your HR, L&D, or operations staff spend selecting coaches, tracking progress, and managing the engagement.</li>
+                        <li><strong>Technology & tools:</strong> Costs for any platforms, software, or assessment tools that support the coaching process (beyond the primary coaching fees).</li>
+                        <li><strong>Facilities or travel:</strong> Expenses for booking meeting rooms, travel, or accommodations if sessions occur in person.</li>
+                        <li><strong>Overhead allocation:</strong> A proportion of general business expenses (IT, HR, office space, utilities) attributable to supporting the coaching program.</li>
+                      </ul>
+                      <div className="bg-primary/10 p-4 rounded-lg">
+                        <p className="font-medium">💡 Tip for users:</p>
+                        <p>
+                          If you're unsure, start with a simple estimate (e.g., 10–20% of total coaching fees) and adjust later as you collect more accurate data. The goal is to acknowledge the hidden costs of running a program so that ROI calculations don't overstate the net benefit.
+                        </p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
               <Input
                 id="overhead_costs"
                 type="number"
