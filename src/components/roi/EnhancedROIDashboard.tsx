@@ -91,7 +91,7 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
                 <div className="text-3xl font-bold text-primary mb-1">
                   {formatPercentage(roiCalculation.roi)}
                 </div>
-                <div className="text-sm text-muted-foreground">Return on Investment</div>
+                <div className="text-sm text-muted-foreground">Return on Investment (per year)</div>
                 <Tooltip>
                   <TooltipTrigger>
                     <Info className="h-3 w-3 text-muted-foreground mt-1 mx-auto" />
@@ -106,7 +106,7 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
                 <div className="text-3xl font-bold mb-1">
                   {formatCurrency(roiCalculation.npv, true)}
                 </div>
-                <div className="text-sm text-muted-foreground">Net Present Value</div>
+                <div className="text-sm text-muted-foreground">Net Present Value (per year)</div>
                 <Tooltip>
                   <TooltipTrigger>
                     <Info className="h-3 w-3 text-muted-foreground mt-1 mx-auto" />
