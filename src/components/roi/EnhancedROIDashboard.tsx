@@ -22,6 +22,7 @@ import { SensitivityAnalysisChart } from './SensitivityAnalysisChart';
 import { ROIChart } from './ROIChart';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PDFExportService } from '@/lib/pdf-export';
 
 interface EnhancedROIDashboardProps {
   program: Program & { organization: { name: string } };
@@ -58,6 +59,61 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
 
   const roiStatus = getROIStatus(roiCalculation.roi);
 
+  const handleExportReport = async () => {
+    try {
+      const pdfService = new PDFExportService();
+      
+      // Create a properly structured program object for export
+      const exportProgram = {
+        ...program,
+        organization: {
+          id: 'temp-id',
+          name: program.organization.name,
+          user_id: 'temp-user-id',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      };
+      
+      // Prepare calculation data for export
+      const calculationData = {
+        [program.id]: {
+          roi: roiCalculation.roi,
+          paybackPeriod: roiCalculation.paybackPeriod,
+          totalInvestment: roiCalculation.totalInvestment,
+          totalBenefits: roiCalculation.totalBenefits
+        }
+      };
+
+      const benefitData = {
+        [program.id]: benefits
+      };
+
+      await pdfService.exportComparison(
+        {
+          programs: [exportProgram],
+          benefits: benefitData,
+          calculations: calculationData
+        },
+        {
+          title: `ROI Analysis - ${program.name}`,
+          subtitle: `${program.organization.name} Executive Coaching Program`,
+          includeLogo: true,
+          includeFootnotes: true,
+          sources: [
+            'Internal Program Data and Financial Calculations',
+            'Industry Benchmarks from Executive Coaching Research',
+            'Resonance Executive Coaching ROI Dashboard'
+          ],
+          author: 'Resonance Executive Coaching'
+        }
+      );
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      // You could add a toast notification here for user feedback
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -78,7 +134,7 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
                 <Badge variant={roiStatus.variant}>
                   {roiStatus.label} ROI
                 </Badge>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleExportReport}>
                   <Download className="h-4 w-4 mr-1" />
                   Export
                 </Button>
