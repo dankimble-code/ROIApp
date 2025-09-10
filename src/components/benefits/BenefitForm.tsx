@@ -16,7 +16,6 @@ interface BenefitFormProps {
   benefit?: Partial<Benefit>;
   onSubmit: (benefit: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel: () => void;
-  availableAttribution: number;
   isEditing?: boolean;
   participantCount?: number;
   usedCategories?: BenefitCategory[];
@@ -26,7 +25,6 @@ export function BenefitForm({
   benefit, 
   onSubmit, 
   onCancel, 
-  availableAttribution,
   isEditing = false,
   participantCount = 1,
   usedCategories = []
@@ -36,10 +34,6 @@ export function BenefitForm({
   const [annualValue, setAnnualValue] = useState(benefit?.annual_value?.toString() || '');
   const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 50]);
   const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
-
-  const maxAttribution = isEditing ? 
-    availableAttribution + (benefit?.attribution_percentage || 0) : 
-    availableAttribution;
 
   // Filter out used categories unless editing the current benefit
   const availableCategories = BENEFIT_CATEGORIES.filter(cat => 
@@ -51,10 +45,6 @@ export function BenefitForm({
     
     const annualValueNum = parseFloat(annualValue);
     if (isNaN(annualValueNum) || annualValueNum <= 0) {
-      return;
-    }
-
-    if (attribution[0] > maxAttribution) {
       return;
     }
 
@@ -123,7 +113,7 @@ export function BenefitForm({
     const template = getBenefitTemplate(category);
     setDescription(template.description);
     setAnnualValue(template.value.toString());
-    setAttribution([Math.min(template.attribution, maxAttribution)]);
+    setAttribution([template.attribution]);
   };
 
   return (
@@ -235,20 +225,15 @@ export function BenefitForm({
               <Slider
                 value={attribution}
                 onValueChange={setAttribution}
-                max={maxAttribution}
-                min={1}
+                max={100}
+                min={0}
                 step={1}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>1%</span>
-                <span>Available: {formatPercentage(maxAttribution)}</span>
+                <span>0%</span>
+                <span>100%</span>
               </div>
-              {attribution[0] > maxAttribution && (
-                <p className="text-sm text-destructive">
-                  Exceeds available attribution ({formatPercentage(maxAttribution)})
-                </p>
-              )}
             </div>
 
             {/* Confidence Level */}
@@ -324,7 +309,7 @@ export function BenefitForm({
               </Button>
               <Button 
                 type="submit" 
-                disabled={!description || !annualValue || attribution[0] > maxAttribution}
+                disabled={!description || !annualValue}
               >
                 {isEditing ? 'Update Benefit' : 'Add Benefit'}
               </Button>

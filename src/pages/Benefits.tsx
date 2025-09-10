@@ -29,9 +29,7 @@ export default function Benefits() {
   const program = state?.program || {};
   const participantCount = program.participants_count || 1;
 
-  // Attribution tracking and used categories
-  const totalAttribution = benefits.reduce((sum, benefit) => sum + (benefit.attribution_percentage || 0), 0);
-  const availableAttribution = Math.max(0, 100 - totalAttribution);
+  // Used categories tracking
   const usedCategories = benefits.map(benefit => benefit.category).filter(Boolean) as BenefitCategory[];
 
   const handleCreateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
@@ -91,7 +89,6 @@ export default function Benefits() {
         <BenefitForm
           onSubmit={handleCreateBenefit}
           onCancel={() => setShowForm(false)}
-          availableAttribution={availableAttribution}
           participantCount={participantCount}
           usedCategories={usedCategories}
         />
@@ -106,8 +103,8 @@ export default function Benefits() {
           benefit={editingBenefit}
           onSubmit={handleUpdateBenefit}
           onCancel={() => setEditingBenefit(null)}
-          availableAttribution={availableAttribution + (editingBenefit.attribution_percentage || 0)}
           participantCount={participantCount}
+          usedCategories={usedCategories}
           isEditing
         />
       </div>
@@ -144,55 +141,30 @@ export default function Benefits() {
             </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Attribution Overview */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium">Attribution Overview</h4>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-3 w-3 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Total attribution to coaching across all benefits cannot exceed 100%</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Badge variant={availableAttribution > 0 ? 'secondary' : 'outline'}>
-                  {formatPercentage(availableAttribution)} available
-                </Badge>
-              </div>
-              <Progress value={totalAttribution} className="h-2" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Used: {formatPercentage(totalAttribution)}</span>
-                <span>Remaining: {formatPercentage(availableAttribution)}</span>
-              </div>
+        <CardContent className="space-y-6">
+          {/* Benefits Summary */}
+          {benefits.length > 0 && (
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold">{formatCurrency(totalAnnualValue)}</div>
+                  <p className="text-sm text-muted-foreground">Total Annual Value (All Participants)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Per participant: {formatCurrency(totalAnnualValue / participantCount)}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="bg-muted/50">
+                <CardContent className="pt-4">
+                  <div className="text-2xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
+                  <p className="text-sm text-muted-foreground">Expected Impact (All Participants)</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Per participant: {formatCurrency(totalAttributableValue / participantCount)}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
-
-            {/* Benefits Summary */}
-            {benefits.length > 0 && (
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-muted/50">
-                  <CardContent className="pt-4">
-                    <div className="text-2xl font-bold">{formatCurrency(totalAnnualValue)}</div>
-                    <p className="text-sm text-muted-foreground">Total Annual Value (All Participants)</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Per participant: {formatCurrency(totalAnnualValue / participantCount)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-muted/50">
-                  <CardContent className="pt-4">
-                    <div className="text-2xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
-                    <p className="text-sm text-muted-foreground">Expected Impact (All Participants)</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Per participant: {formatCurrency(totalAttributableValue / participantCount)}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+          )}
 
             <Separator />
 

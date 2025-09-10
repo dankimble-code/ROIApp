@@ -83,7 +83,6 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
       <BenefitForm
         onSubmit={handleCreateBenefit}
         onCancel={() => setShowForm(false)}
-        availableAttribution={attribution?.remaining || 100}
         participantCount={participantCount}
       />
     );
@@ -95,7 +94,6 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
         benefit={editingBenefit}
         onSubmit={handleUpdateBenefit}
         onCancel={() => setEditingBenefit(null)}
-        availableAttribution={attribution?.remaining || 100}
         participantCount={participantCount}
         isEditing
       />
