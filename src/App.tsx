@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Benefits from "./pages/Benefits";
 import Calculation from "./pages/Calculation";
 import Styleguide from "./pages/Styleguide";
+import EmailConfirmed from "./pages/EmailConfirmed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/benefits" element={<Benefits />} />
               <Route path="/calculation" element={<Calculation />} />
               <Route path="/styleguide" element={<Styleguide />} />
+              <Route path="/email-confirmed" element={<EmailConfirmed />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
