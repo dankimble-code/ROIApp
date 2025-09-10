@@ -65,11 +65,6 @@ export function BenefitForm({
         value: 10000,
         attribution: 50,
       },
-      'Leadership Development': {
-        description: 'Enhanced leadership capabilities per participant leading to better team performance',
-        value: 10000,
-        attribution: 50,
-      },
       'Retention Improvement': {
         description: 'Reduced turnover costs per participant through improved employee satisfaction',
         value: 15000,

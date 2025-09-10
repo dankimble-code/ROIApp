@@ -97,7 +97,6 @@ export interface SensitivityData {
 
 export type BenefitCategory = 
   | 'Productivity Gains'
-  | 'Leadership Development'
   | 'Retention Improvement'
   | 'Performance Enhancement'
   | 'Decision Making'
@@ -108,7 +107,6 @@ export type BenefitCategory =
 
 export const BENEFIT_CATEGORIES: BenefitCategory[] = [
   'Productivity Gains',
-  'Leadership Development', 
   'Retention Improvement',
   'Performance Enhancement',
   'Decision Making',
