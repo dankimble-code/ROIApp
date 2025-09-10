@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Download, Calculator, TrendingUp, DollarSign } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
+import { PDFExportService } from '@/lib/pdf-export';
 
 interface CalculationPageState {
   organization: any;
@@ -53,6 +54,69 @@ export default function Calculation() {
     navigate('/');
   };
 
+  const handleExportReport = async () => {
+    try {
+      const pdfService = new PDFExportService();
+      
+      // Create properly structured program object for export
+      const exportProgram = {
+        id: 'calculation-program',
+        name: program.name || 'Executive Coaching Program',
+        duration_months: program.duration_months || 12,
+        participants_count: participantCount,
+        cost_per_participant: costPerParticipant,
+        overhead_costs: program.overhead_costs || 0,
+        user_id: 'temp-user',
+        organization_id: 'temp-org',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        organization: {
+          id: 'temp-org-id',
+          name: organization.name || 'Organization',
+          user_id: 'temp-user-id',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      };
+      
+      // Prepare calculation data for export
+      const calculationData = {
+        'calculation-program': {
+          roi: roi,
+          paybackPeriod: paybackPeriod / 12, // Convert months to years
+          totalInvestment: totalProgramCost,
+          totalBenefits: totalAttributableValue
+        }
+      };
+
+      const benefitData = {
+        'calculation-program': benefits
+      };
+
+      await pdfService.exportComparison(
+        {
+          programs: [exportProgram],
+          benefits: benefitData,
+          calculations: calculationData
+        },
+        {
+          title: `ROI Analysis - ${program.name || 'Executive Coaching Program'}`,
+          subtitle: `${organization.name || 'Organization'} Coaching Program Analysis`,
+          includeLogo: true,
+          includeFootnotes: true,
+          sources: [
+            'Program Investment and Benefits Data',
+            'ROI Calculation Methodology',
+            'Resonance Executive Coaching ROI Dashboard'
+          ],
+          author: 'Resonance Executive Coaching'
+        }
+      );
+    } catch (error) {
+      console.error('Error exporting report:', error);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -68,7 +132,7 @@ export default function Calculation() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Benefits
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportReport}>
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
@@ -241,7 +305,7 @@ export default function Calculation() {
           <Button variant="outline">
             Save Analysis
           </Button>
-          <Button>
+          <Button onClick={handleExportReport}>
             <Download className="h-4 w-4 mr-2" />
             Generate Report
           </Button>
