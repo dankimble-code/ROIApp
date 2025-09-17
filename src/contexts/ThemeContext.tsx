@@ -10,7 +10,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [palette, setPaletteState] = useState<PaletteType>('palette-b')
+  const [palette, setPaletteState] = useState<PaletteType>('palette-a')
 
   // Load theme from localStorage on mount
   useEffect(() => {
