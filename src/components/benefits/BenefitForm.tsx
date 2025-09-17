@@ -19,6 +19,7 @@ interface BenefitFormProps {
   isEditing?: boolean;
   participantCount?: number;
   usedCategories?: BenefitCategory[];
+  existingBenefits?: Benefit[];
 }
 
 export function BenefitForm({ 
@@ -27,7 +28,8 @@ export function BenefitForm({
   onCancel, 
   isEditing = false,
   participantCount = 1,
-  usedCategories = []
+  usedCategories = [],
+  existingBenefits = []
 }: BenefitFormProps) {
   const [category, setCategory] = useState<BenefitCategory>(benefit?.category as BenefitCategory || 'Productivity Gains');
   const [description, setDescription] = useState(benefit?.description || '');
@@ -35,10 +37,14 @@ export function BenefitForm({
   const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 50]);
   const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
 
-  // Filter out used categories unless editing the current benefit
-  const availableCategories = BENEFIT_CATEGORIES.filter(cat => 
-    !usedCategories.includes(cat) || (isEditing && cat === benefit?.category)
-  );
+  // Filter out used categories unless editing the current benefit or it's "Other" (up to 5 allowed)
+  const otherBenefitsCount = existingBenefits.filter(b => b.category === 'Other' && (!isEditing || b.id !== benefit?.id)).length;
+  const availableCategories = BENEFIT_CATEGORIES.filter(cat => {
+    if (cat === 'Other') {
+      return otherBenefitsCount < 5; // Allow up to 5 "Other" benefits
+    }
+    return !usedCategories.includes(cat) || (isEditing && cat === benefit?.category);
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +52,18 @@ export function BenefitForm({
     const annualValueNum = parseFloat(annualValue);
     if (isNaN(annualValueNum) || annualValueNum <= 0) {
       return;
+    }
+
+    // Validate unique description for "Other" benefits
+    if (category === 'Other') {
+      const existingOtherDescriptions = existingBenefits
+        .filter(b => b.category === 'Other' && (!isEditing || b.id !== benefit?.id))
+        .map(b => b.description.toLowerCase().trim());
+      
+      if (existingOtherDescriptions.includes(description.toLowerCase().trim())) {
+        alert('Each "Other" benefit must have a unique description. Please provide a different description.');
+        return;
+      }
     }
 
     onSubmit({
@@ -127,6 +145,11 @@ export function BenefitForm({
             {/* Category Selection */}
             <div className="space-y-2">
               <Label htmlFor="category">Benefit Category</Label>
+              {category === 'Other' && otherBenefitsCount > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {otherBenefitsCount}/5 "Other" benefits used. Each must have a unique description.
+                </p>
+              )}
               <div className="flex gap-2">
                 <Select value={category} onValueChange={(value) => setCategory(value as BenefitCategory)}>
                   <SelectTrigger>

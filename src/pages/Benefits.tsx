@@ -51,8 +51,8 @@ export default function Benefits() {
   // Get benefits from database or use empty array
   const benefits = benefitsQuery.data || [];
   
-  // Used categories tracking
-  const usedCategories = benefits.map(benefit => benefit.category).filter(Boolean) as BenefitCategory[];
+  // Used categories tracking - don't count "Other" as used since multiples are allowed  
+  const usedCategories = benefits.map(benefit => benefit.category).filter(cat => cat !== 'Other') as BenefitCategory[];
 
   // Create or get existing program
   useEffect(() => {
@@ -209,6 +209,7 @@ export default function Benefits() {
           onCancel={() => setShowForm(false)}
           participantCount={participantCount}
           usedCategories={usedCategories}
+          existingBenefits={benefits}
         />
       </div>
     );
@@ -223,6 +224,7 @@ export default function Benefits() {
           onCancel={() => setEditingBenefit(null)}
           participantCount={participantCount}
           usedCategories={usedCategories}
+          existingBenefits={benefits}
           isEditing
         />
       </div>
@@ -253,7 +255,10 @@ export default function Benefits() {
                 <TrendingUp className="h-5 w-5" />
                 Expected Benefits & Outcomes
               </CardTitle>
-            <Button onClick={() => setShowForm(true)} disabled={usedCategories.length >= 9}>
+            <Button 
+              onClick={() => setShowForm(true)} 
+              disabled={benefits.length >= 13} // 8 unique categories + 5 "Other" benefits max
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add Benefit
             </Button>
@@ -294,7 +299,10 @@ export default function Benefits() {
                 <p className="text-muted-foreground mb-4">
                   Add benefits to calculate ROI projections for your coaching program.
                 </p>
-              <Button onClick={() => setShowForm(true)} disabled={usedCategories.length >= 9}>
+              <Button 
+                onClick={() => setShowForm(true)} 
+                disabled={benefits.length >= 13} // 8 unique categories + 5 "Other" benefits max
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Benefit
               </Button>
