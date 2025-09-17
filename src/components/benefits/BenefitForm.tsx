@@ -45,6 +45,7 @@ export function BenefitForm({
   const [annualValue, setAnnualValue] = useState(benefit?.annual_value?.toString() || '');
   const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 50]);
   const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   // Filter out used categories unless editing the current benefit or it's "Other" (up to 5 allowed)
   // Note: For existing "Other" benefits, we check against their custom names, not "Other"
@@ -61,17 +62,30 @@ export function BenefitForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasAttemptedSubmit(true);
     
-    const annualValueNum = parseFloat(annualValue);
-    if (isNaN(annualValueNum) || annualValueNum <= 0) {
+    // Check for missing required fields
+    const missingFields = [];
+    
+    if (!description.trim()) {
+      missingFields.push('Description');
+    }
+    
+    if (!annualValue || isNaN(parseFloat(annualValue)) || parseFloat(annualValue) <= 0) {
+      missingFields.push('Annual Value Per Participant');
+    }
+    
+    if (category === 'Other' && !customName.trim()) {
+      missingFields.push('Custom Benefit Name');
+    }
+    
+    // Show alert with missing fields if any
+    if (missingFields.length > 0) {
+      alert(`Please fill out the following required fields to continue:\n\n• ${missingFields.join('\n• ')}\n\nAll fields marked with * are required to add this benefit.`);
       return;
     }
 
-    // Validate custom name for "Other" benefits
-    if (category === 'Other' && !customName.trim()) {
-      alert('Please provide a custom name for this benefit.');
-      return;
-    }
+    const annualValueNum = parseFloat(annualValue);
 
     // Validate unique description for "Other" benefits
     if (category === 'Other') {
@@ -202,14 +216,18 @@ export function BenefitForm({
             {/* Custom Name for Other Benefits */}
             {category === 'Other' && (
               <div className="space-y-2">
-                <Label htmlFor="customName">Custom Benefit Name</Label>
+                <Label htmlFor="customName">Custom Benefit Name *</Label>
                 <Input
                   id="customName"
                   placeholder="Enter a custom name for this benefit (e.g., 'Strategic Planning Skills')"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   required
+                  className={hasAttemptedSubmit && !customName.trim() ? 'border-red-500 focus:border-red-500' : ''}
                 />
+                {hasAttemptedSubmit && !customName.trim() && (
+                  <p className="text-sm text-red-600">Custom benefit name is required</p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   This will be the display name for your custom benefit category.
                 </p>
@@ -218,7 +236,7 @@ export function BenefitForm({
 
             {/* Description */}
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description *</Label>
               <Textarea
                 id="description"
                 placeholder="Describe how coaching will deliver this benefit..."
@@ -226,13 +244,17 @@ export function BenefitForm({
                 onChange={(e) => setDescription(e.target.value)}
                 required
                 rows={3}
+                className={hasAttemptedSubmit && !description.trim() ? 'border-red-500 focus:border-red-500' : ''}
               />
+              {hasAttemptedSubmit && !description.trim() && (
+                <p className="text-sm text-red-600">Description is required</p>
+              )}
             </div>
 
             {/* Annual Value Per Participant */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label htmlFor="annualValue">Annual Value Per Participant</Label>
+                <Label htmlFor="annualValue">Annual Value Per Participant *</Label>
                 <Tooltip>
                   <TooltipTrigger>
                     <Info className="h-3 w-3 text-muted-foreground" />
@@ -250,7 +272,11 @@ export function BenefitForm({
                 onChange={(e) => setAnnualValue(e.target.value)}
                 required
                 min="0"
+                className={hasAttemptedSubmit && (!annualValue || isNaN(parseFloat(annualValue)) || parseFloat(annualValue) <= 0) ? 'border-red-500 focus:border-red-500' : ''}
               />
+              {hasAttemptedSubmit && (!annualValue || isNaN(parseFloat(annualValue)) || parseFloat(annualValue) <= 0) && (
+                <p className="text-sm text-red-600">Please enter a valid annual value greater than 0</p>
+              )}
               {annualValue && !isNaN(parseFloat(annualValue)) && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">
@@ -368,7 +394,7 @@ export function BenefitForm({
               </Button>
               <Button 
                 type="submit" 
-                disabled={!description || !annualValue || (category === 'Other' && !customName.trim())}
+                className="w-full"
               >
                 {isEditing ? 'Update Benefit' : 'Add Benefit'}
               </Button>
