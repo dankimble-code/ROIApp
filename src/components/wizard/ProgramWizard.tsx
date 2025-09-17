@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -10,6 +10,8 @@ import { ReviewStep } from './steps/ReviewStep';
 import { Organization, Program, Benefit } from '@/types/coaching';
 import { useCreateOrganization } from '@/hooks/useOrganizations';
 import { useCreateProgram } from '@/hooks/usePrograms';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { UnsavedChangesDialog } from '@/components/ui/unsaved-changes-dialog';
 
 interface ProgramWizardProps {
   onComplete: () => void;
@@ -21,9 +23,26 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
   const [organization, setOrganization] = useState<Partial<Organization>>({});
   const [program, setProgram] = useState<Partial<Program>>({});
   const [benefits, setBenefits] = useState<Partial<Benefit>[]>([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const createOrganization = useCreateOrganization();
   const createProgram = useCreateProgram();
+
+  // Track unsaved changes
+  const { showPrompt, confirmNavigation, cancelNavigation, promptNavigation } = useUnsavedChanges({
+    when: hasUnsavedChanges && !isSaving,
+    message: 'You have unsaved changes in your program setup. Are you sure you want to leave?'
+  });
+
+  // Mark as having unsaved changes when any data is entered
+  useEffect(() => {
+    const hasData = 
+      Object.keys(organization).length > 0 || 
+      Object.keys(program).length > 0 || 
+      benefits.length > 0;
+    setHasUnsavedChanges(hasData && !isSaving);
+  }, [organization, program, benefits, isSaving]);
 
   const steps = [
     { id: 1, title: 'Organization', description: 'Company information' },
@@ -49,6 +68,7 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
 
   const handleComplete = async () => {
     try {
+      setIsSaving(true);
       // Create organization first
       const orgData = await createOrganization.mutateAsync({
         name: organization.name!,
@@ -66,10 +86,22 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
         overhead_costs: program.overhead_costs || 0,
       });
 
+      // Mark as saved
+      setHasUnsavedChanges(false);
       onComplete();
     } catch (error) {
       console.error('Error creating program:', error);
+      setIsSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    if (hasUnsavedChanges && !isSaving) {
+      if (!promptNavigation('/')) {
+        return; // Navigation was blocked, show prompt
+      }
+    }
+    onCancel();
   };
 
   const renderStep = () => {
@@ -128,7 +160,7 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
             Set up a new executive coaching program for ROI analysis
           </p>
         </div>
-        <Button variant="outline" onClick={onCancel}>
+        <Button variant="outline" onClick={handleCancel}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Cancel
         </Button>
@@ -197,6 +229,17 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
       <div className="min-h-[500px]">
         {renderStep()}
       </div>
+
+      {/* Unsaved Changes Dialog */}
+      <UnsavedChangesDialog
+        open={showPrompt}
+        onConfirm={() => {
+          confirmNavigation();
+          onCancel();
+        }}
+        onCancel={cancelNavigation}
+        message="You have unsaved changes in your program setup. Are you sure you want to leave?"
+      />
     </div>
   );
 }

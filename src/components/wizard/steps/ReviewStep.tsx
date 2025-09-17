@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Organization, Program, Benefit } from '@/types/coaching';
+import { Loader2 } from 'lucide-react';
 
 interface ReviewStepProps {
   organization: Partial<Organization>;
@@ -11,6 +13,17 @@ interface ReviewStepProps {
 }
 
 export function ReviewStep({ organization, program, benefits, onComplete, onBack }: ReviewStepProps) {
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleCreate = async () => {
+    setIsCreating(true);
+    try {
+      await onComplete();
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -28,8 +41,19 @@ export function ReviewStep({ organization, program, benefits, onComplete, onBack
           </div>
         </div>
         <div className="flex justify-between mt-6">
-          <Button type="button" variant="outline" onClick={onBack}>Previous</Button>
-          <Button onClick={onComplete}>Create Program</Button>
+          <Button type="button" variant="outline" onClick={onBack} disabled={isCreating}>
+            Previous
+          </Button>
+          <Button onClick={handleCreate} disabled={isCreating}>
+            {isCreating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating Program...
+              </>
+            ) : (
+              'Create Program'
+            )}
+          </Button>
         </div>
       </CardContent>
     </Card>
