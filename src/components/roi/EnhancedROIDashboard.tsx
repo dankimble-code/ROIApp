@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -29,9 +30,21 @@ interface EnhancedROIDashboardProps {
 }
 
 export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
+  const navigate = useNavigate();
   const { data: benefits = [] } = useBenefits(program.id);
   const { data: scenario } = useBaselineScenario(program.id);
   const roiCalculation = useROICalculation(program, benefits, scenario);
+
+  const handleAddBenefits = () => {
+    navigate('/benefits', {
+      state: {
+        programId: program.id,
+        organization: program.organization,
+        program: program,
+        benefits: benefits
+      }
+    });
+  };
 
   if (!roiCalculation || benefits.length === 0) {
     return (
@@ -42,7 +55,7 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
           <p className="text-muted-foreground text-center mb-4">
             Add benefits to this program to see comprehensive ROI analysis with industry benchmarks and explanations.
           </p>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleAddBenefits}>
             Add Benefits
           </Button>
         </CardContent>
