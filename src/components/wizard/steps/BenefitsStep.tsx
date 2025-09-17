@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { Benefit } from '@/types/coaching';
-import { useBenefits, useBenefitAttribution, useCreateBenefit, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
+import { useBenefits, useCreateBenefit, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
 import { BenefitForm } from '@/components/benefits/BenefitForm';
 import { Plus, Edit, Trash2, Info, TrendingUp } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
@@ -29,7 +29,6 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
   const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
   
   const { data: benefits = [], isLoading } = useBenefits(programId);
-  const { data: attribution } = useBenefitAttribution(programId);
   const createBenefit = useCreateBenefit();
   const updateBenefit = useUpdateBenefit();
   const deleteBenefit = useDeleteBenefit();
@@ -120,33 +119,6 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Attribution Overview */}
-          {attribution && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium">Attribution Overview</h4>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-3 w-3 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Total attribution to coaching across all benefits cannot exceed 100%</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <Badge variant={attribution.remaining > 0 ? 'secondary' : 'outline'}>
-                  {formatPercentage(attribution.remaining)} available
-                </Badge>
-              </div>
-              <Progress value={attribution.total} className="h-2" />
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Used: {formatPercentage(attribution.total)}</span>
-                <span>Remaining: {formatPercentage(attribution.remaining)}</span>
-              </div>
-            </div>
-          )}
-
           {/* Benefits Summary */}
           {benefits.length > 0 && (
             <div className="grid grid-cols-2 gap-4">

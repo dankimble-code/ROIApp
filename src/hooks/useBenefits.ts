@@ -59,23 +59,6 @@ export function useCreateBenefit() {
 
   return useMutation({
     mutationFn: async (data: CreateBenefitData): Promise<Benefit> => {
-      // Validate attribution percentage doesn't exceed 100% total
-      const { data: existingBenefits } = await supabase
-        .from('benefits')
-        .select('attribution_percentage')
-        .eq('program_id', data.program_id);
-
-      const currentTotal = existingBenefits?.reduce(
-        (sum, benefit) => sum + benefit.attribution_percentage, 
-        0
-      ) || 0;
-
-      if (currentTotal + data.attribution_percentage > 100) {
-        throw new Error(
-          `Total attribution cannot exceed 100%. Current total: ${currentTotal}%, attempting to add: ${data.attribution_percentage}%`
-        );
-      }
-
       const { data: benefit, error } = await supabase
         .from('benefits')
         .insert({
@@ -129,7 +112,7 @@ export function useUpdateBenefit() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateBenefitData }): Promise<Benefit> => {
-      // Get current data for audit log and validation
+      // Get current data for audit log
       const { data: currentBenefit } = await supabase
         .from('benefits')
         .select('*')
@@ -138,26 +121,6 @@ export function useUpdateBenefit() {
 
       if (!currentBenefit) {
         throw new Error('Benefit not found');
-      }
-
-      // Validate attribution percentage if being updated
-      if (data.attribution_percentage !== undefined) {
-        const { data: existingBenefits } = await supabase
-          .from('benefits')
-          .select('attribution_percentage')
-          .eq('program_id', currentBenefit.program_id)
-          .neq('id', id);
-
-        const currentTotal = existingBenefits?.reduce(
-          (sum, benefit) => sum + benefit.attribution_percentage, 
-          0
-        ) || 0;
-
-        if (currentTotal + data.attribution_percentage > 100) {
-          throw new Error(
-            `Total attribution cannot exceed 100%. Current total (excluding this benefit): ${currentTotal}%, attempting to set: ${data.attribution_percentage}%`
-          );
-        }
       }
 
       const { data: benefit, error } = await supabase
@@ -258,27 +221,13 @@ export function useDeleteBenefit() {
   });
 }
 
-// Get total attribution for a program
+// Get total attribution for a program (DEPRECATED - attribution is not cumulative)
 export function useBenefitAttribution(programId: string | null) {
   return useQuery({
     queryKey: ['benefits', 'attribution', programId],
     queryFn: async (): Promise<{ total: number; remaining: number }> => {
-      if (!programId) return { total: 0, remaining: 100 };
-
-      const { data, error } = await supabase
-        .from('benefits')
-        .select('attribution_percentage')
-        .eq('program_id', programId);
-
-      if (error) {
-        console.error('Error fetching benefit attribution:', error);
-        throw new Error(error.message);
-      }
-
-      const total = data?.reduce((sum, benefit) => sum + benefit.attribution_percentage, 0) || 0;
-      const remaining = Math.max(0, 100 - total);
-
-      return { total, remaining };
+      // Attribution is now per-benefit, not cumulative
+      return { total: 0, remaining: 100 };
     },
     enabled: !!programId,
   });
@@ -292,27 +241,6 @@ export function useBulkCreateBenefits() {
   return useMutation({
     mutationFn: async (benefits: CreateBenefitData[]): Promise<Benefit[]> => {
       if (benefits.length === 0) return [];
-
-      const programId = benefits[0].program_id;
-      
-      // Validate total attribution doesn't exceed 100%
-      const { data: existingBenefits } = await supabase
-        .from('benefits')
-        .select('attribution_percentage')
-        .eq('program_id', programId);
-
-      const currentTotal = existingBenefits?.reduce(
-        (sum, benefit) => sum + benefit.attribution_percentage, 
-        0
-      ) || 0;
-
-      const newTotal = benefits.reduce((sum, benefit) => sum + benefit.attribution_percentage, 0);
-
-      if (currentTotal + newTotal > 100) {
-        throw new Error(
-          `Total attribution cannot exceed 100%. Current total: ${currentTotal}%, attempting to add: ${newTotal}%`
-        );
-      }
 
       const { data, error } = await supabase
         .from('benefits')
