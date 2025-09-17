@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { BenefitForm } from '@/components/benefits/BenefitForm';
 import { Plus, Edit, Trash2, Info, TrendingUp, ArrowLeft, Calculator, Save } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
-import { Benefit, BenefitCategory } from '@/types/coaching';
+import { Benefit, BenefitCategory, BENEFIT_CATEGORIES } from '@/types/coaching';
 import { useCreateProgram, useProgram, useUpdateProgram } from '@/hooks/usePrograms';
 import { useCreateOrganization } from '@/hooks/useOrganizations';
 import { useBenefits, useCreateBenefit, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
@@ -51,8 +51,10 @@ export default function Benefits() {
   // Get benefits from database or use empty array
   const benefits = benefitsQuery.data || [];
   
-  // Used categories tracking - don't count "Other" as used since multiples are allowed  
-  const usedCategories = benefits.map(benefit => benefit.category).filter(cat => cat !== 'Other') as BenefitCategory[];
+  // Used categories tracking - don't count custom "Other" benefits as used since multiples are allowed  
+  const usedCategories = benefits
+    .map(benefit => benefit.category)
+    .filter(cat => BENEFIT_CATEGORIES.includes(cat as BenefitCategory) && cat !== 'Other') as BenefitCategory[];
 
   // Create or get existing program
   useEffect(() => {

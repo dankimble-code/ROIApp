@@ -31,14 +31,27 @@ export function BenefitForm({
   usedCategories = [],
   existingBenefits = []
 }: BenefitFormProps) {
-  const [category, setCategory] = useState<BenefitCategory>(benefit?.category as BenefitCategory || 'Productivity Gains');
+  const [category, setCategory] = useState<BenefitCategory>(
+    (benefit && benefit.category && !BENEFIT_CATEGORIES.includes(benefit.category as BenefitCategory)) 
+      ? 'Other' 
+      : (benefit?.category as BenefitCategory) || 'Productivity Gains'
+  );
+  const [customName, setCustomName] = useState(
+    (benefit && benefit.category && !BENEFIT_CATEGORIES.includes(benefit.category as BenefitCategory)) 
+      ? benefit.category 
+      : ''
+  );
   const [description, setDescription] = useState(benefit?.description || '');
   const [annualValue, setAnnualValue] = useState(benefit?.annual_value?.toString() || '');
   const [attribution, setAttribution] = useState([benefit?.attribution_percentage || 50]);
   const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
 
   // Filter out used categories unless editing the current benefit or it's "Other" (up to 5 allowed)
-  const otherBenefitsCount = existingBenefits.filter(b => b.category === 'Other' && (!isEditing || b.id !== benefit?.id)).length;
+  // Note: For existing "Other" benefits, we check against their custom names, not "Other"
+  const otherBenefitsCount = existingBenefits.filter(b => 
+    !BENEFIT_CATEGORIES.includes(b.category as BenefitCategory) && 
+    (!isEditing || b.id !== benefit?.id)
+  ).length;
   const availableCategories = BENEFIT_CATEGORIES.filter(cat => {
     if (cat === 'Other') {
       return otherBenefitsCount < 5; // Allow up to 5 "Other" benefits
@@ -54,21 +67,27 @@ export function BenefitForm({
       return;
     }
 
+    // Validate custom name for "Other" benefits
+    if (category === 'Other' && !customName.trim()) {
+      alert('Please provide a custom name for this benefit.');
+      return;
+    }
+
     // Validate unique description for "Other" benefits
     if (category === 'Other') {
       const existingOtherDescriptions = existingBenefits
-        .filter(b => b.category === 'Other' && (!isEditing || b.id !== benefit?.id))
+        .filter(b => !BENEFIT_CATEGORIES.includes(b.category as BenefitCategory) && (!isEditing || b.id !== benefit?.id))
         .map(b => b.description.toLowerCase().trim());
       
       if (existingOtherDescriptions.includes(description.toLowerCase().trim())) {
-        alert('Each "Other" benefit must have a unique description. Please provide a different description.');
+        alert('Each custom benefit must have a unique description. Please provide a different description.');
         return;
       }
     }
 
     onSubmit({
       program_id: benefit?.program_id || '',
-      category,
+      category: category === 'Other' ? customName.trim() : category,
       description,
       annual_value: annualValueNum,
       attribution_percentage: attribution[0],
@@ -151,7 +170,12 @@ export function BenefitForm({
                 </p>
               )}
               <div className="flex gap-2">
-                <Select value={category} onValueChange={(value) => setCategory(value as BenefitCategory)}>
+                <Select value={category} onValueChange={(value) => {
+                  setCategory(value as BenefitCategory);
+                  if (value !== 'Other') {
+                    setCustomName(''); // Clear custom name when switching away from Other
+                  }
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
@@ -174,6 +198,23 @@ export function BenefitForm({
                 </Button>
               </div>
             </div>
+
+            {/* Custom Name for Other Benefits */}
+            {category === 'Other' && (
+              <div className="space-y-2">
+                <Label htmlFor="customName">Custom Benefit Name</Label>
+                <Input
+                  id="customName"
+                  placeholder="Enter a custom name for this benefit (e.g., 'Strategic Planning Skills')"
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  This will be the display name for your custom benefit category.
+                </p>
+              </div>
+            )}
 
             {/* Description */}
             <div className="space-y-2">
@@ -327,7 +368,7 @@ export function BenefitForm({
               </Button>
               <Button 
                 type="submit" 
-                disabled={!description || !annualValue}
+                disabled={!description || !annualValue || (category === 'Other' && !customName.trim())}
               >
                 {isEditing ? 'Update Benefit' : 'Add Benefit'}
               </Button>
