@@ -8,18 +8,18 @@ All colors MUST be HSL. Palette B (Charcoal + Copper) is default.
 
 @layer base {
   :root[data-theme="palette-a"] {
-    /* Palette A: Ink + Rust (cool neutral base) */
-    --bg: 210 40% 98%;
-    --surface: 213 27% 96%;
-    --border: 213 27% 84%;
-    --text: 217 91% 12%;
-    --muted: 215 16% 47%;
-    --primary: 217 33% 17%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 18 51% 50%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 39 35% 53%;
-    --accent-foreground: 217 91% 12%;
+    /* Palette A: Resonance Brand (navy + orange + gold) */
+    --bg: 0 0% 100%;
+    --surface: 0 0% 98%;
+    --border: 0 0% 90%;
+    --text: 218 48% 13%;
+    --muted: 220 5% 50%;
+    --primary: 218 48% 13%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 17 100% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 43 40% 61%;
+    --accent-foreground: 218 48% 13%;
   }
 
   :root[data-theme="palette-b"], :root {
