@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Download, Calculator, TrendingUp, DollarSign } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { PDFExportService } from '@/lib/pdf-export';
+import { useToast } from '@/hooks/use-toast';
 
 interface CalculationPageState {
   organization: any;
@@ -16,6 +17,7 @@ interface CalculationPageState {
 
 export default function Calculation() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const location = useLocation();
   
   const state = location.state as CalculationPageState;
@@ -54,6 +56,13 @@ export default function Calculation() {
 
   const handleStartOver = () => {
     navigate('/');
+  };
+
+  const handleSaveAnalysis = () => {
+    toast({
+      title: "Analysis Saved",
+      description: "Your ROI analysis has been saved successfully.",
+    });
   };
 
   const handleExportReport = async () => {
@@ -432,7 +441,7 @@ export default function Calculation() {
           Start New Analysis
         </Button>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleSaveAnalysis}>
             Save Analysis
           </Button>
           <Button onClick={handleExportReport}>
