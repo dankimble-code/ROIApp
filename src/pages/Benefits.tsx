@@ -7,13 +7,20 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { BenefitForm } from '@/components/benefits/BenefitForm';
-import { Plus, Edit, Trash2, Info, TrendingUp, ArrowLeft, Calculator } from 'lucide-react';
+import { Plus, Edit, Trash2, Info, TrendingUp, ArrowLeft, Calculator, Save } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Benefit, BenefitCategory } from '@/types/coaching';
+import { useCreateProgram, useProgram, useUpdateProgram } from '@/hooks/usePrograms';
+import { useCreateOrganization } from '@/hooks/useOrganizations';
+import { useBenefits, useCreateBenefit, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface BenefitsPageState {
   organization: any;
   program: any;
+  benefits?: any[];
+  programId?: string;
 }
 
 export default function Benefits() {
@@ -21,54 +28,144 @@ export default function Benefits() {
   const location = useLocation();
   const [showForm, setShowForm] = useState(false);
   const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
-  const [benefits, setBenefits] = useState<Partial<Benefit>[]>([]);
+  const [currentProgramId, setCurrentProgramId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  // Get passed state from wizard
+  // Get passed state from wizard or navigation
   const state = location.state as BenefitsPageState;
   const organization = state?.organization || {};
   const program = state?.program || {};
   const participantCount = program.participants_count || 1;
 
+  // Hooks for database operations
+  const createOrganization = useCreateOrganization();
+  const createProgram = useCreateProgram();
+  const updateProgram = useUpdateProgram();
+  const programQuery = useProgram(currentProgramId || '');
+  const benefitsQuery = useBenefits(currentProgramId);
+  const createBenefit = useCreateBenefit();
+  const updateBenefit = useUpdateBenefit();
+  const deleteBenefit = useDeleteBenefit();
+
+  // Get benefits from database or use empty array
+  const benefits = benefitsQuery.data || [];
+  
   // Used categories tracking
   const usedCategories = benefits.map(benefit => benefit.category).filter(Boolean) as BenefitCategory[];
 
-  const handleCreateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
-    const newBenefit = {
-      ...benefitData,
-      id: Math.random().toString(36).substring(2, 15),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+  // Create or get existing program
+  useEffect(() => {
+    const initializeProgram = async () => {
+      // If we have a program ID in state, use it
+      if (state?.programId) {
+        setCurrentProgramId(state.programId);
+        return;
+      }
+
+      // If we have organization and program data, create them in the database
+      if (organization.name && program.name && !currentProgramId) {
+        try {
+          setIsSaving(true);
+          
+          // Create organization first
+          const orgData = await createOrganization.mutateAsync({
+            name: organization.name,
+            industry: organization.industry,
+            employee_count: organization.employee_count,
+          });
+
+          // Then create program
+          const programData = await createProgram.mutateAsync({
+            organization_id: orgData.id,
+            name: program.name,
+            duration_months: program.duration_months || 12,
+            participants_count: program.participants_count || 1,
+            cost_per_participant: program.cost_per_participant || 10000,
+            overhead_costs: program.overhead_costs || 0,
+          });
+
+          setCurrentProgramId(programData.id);
+          
+          // If we have benefits from state, create them in database
+          if (state?.benefits && state.benefits.length > 0) {
+            for (const benefit of state.benefits) {
+              await createBenefit.mutateAsync({
+                program_id: programData.id,
+                category: benefit.category,
+                description: benefit.description,
+                annual_value: benefit.annual_value,
+                attribution_percentage: benefit.attribution_percentage,
+                confidence_level: benefit.confidence_level,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error initializing program:', error);
+          toast({
+            title: "Error",
+            description: "Failed to save program. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsSaving(false);
+        }
+      }
     };
-    setBenefits([...benefits, newBenefit]);
-    setShowForm(false);
+
+    initializeProgram();
+  }, [organization, program, state, currentProgramId]);
+
+  const handleCreateBenefit = async (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!currentProgramId) {
+      toast({
+        title: "Error",
+        description: "Program not initialized. Please try refreshing the page.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createBenefit.mutateAsync({
+        ...benefitData,
+        program_id: currentProgramId,
+      });
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating benefit:', error);
+    }
   };
 
-  const handleUpdateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleUpdateBenefit = async (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
     if (!editingBenefit) return;
     
-    setBenefits(benefits.map(benefit => 
-      benefit.id === editingBenefit.id 
-        ? { ...benefit, ...benefitData, updated_at: new Date().toISOString() }
-        : benefit
-    ));
-    setEditingBenefit(null);
+    try {
+      await updateBenefit.mutateAsync({
+        id: editingBenefit.id,
+        data: benefitData,
+      });
+      setEditingBenefit(null);
+    } catch (error) {
+      console.error('Error updating benefit:', error);
+    }
   };
 
-  const handleDeleteBenefit = (id: string) => {
-    setBenefits(benefits.filter(benefit => benefit.id !== id));
+  const handleDeleteBenefit = async (id: string) => {
+    try {
+      await deleteBenefit.mutateAsync(id);
+    } catch (error) {
+      console.error('Error deleting benefit:', error);
+    }
   };
-
-  const totalAnnualValue = benefits.reduce((sum, benefit) => sum + (benefit.annual_value || 0) * participantCount, 0);
-  const totalAttributableValue = benefits.reduce((sum, benefit) => 
-    sum + ((benefit.annual_value || 0) * participantCount * ((benefit.attribution_percentage || 0) / 100) * ((benefit.confidence_level || 0) / 100)), 0
-  );
 
   const handleCalculateTotal = () => {
     navigate('/calculation', {
       state: {
-        organization,
-        program,
-        benefits
+        organization: programQuery.data?.organization || organization,
+        program: programQuery.data || program,
+        benefits,
+        programId: currentProgramId
       }
     });
   };
@@ -76,12 +173,33 @@ export default function Benefits() {
   const handleBack = () => {
     navigate('/', {
       state: {
-        organization,
-        program,
-        benefits
+        organization: programQuery.data?.organization || organization,
+        program: programQuery.data || program,
+        benefits,
+        programId: currentProgramId
       }
     });
   };
+
+  // Show loading state while initializing
+  if (isSaving || benefitsQuery.isLoading || (currentProgramId && programQuery.isLoading)) {
+    return (
+      <div className="max-w-4xl mx-auto p-6 flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            {isSaving ? 'Saving program...' : 'Loading benefits...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate totals
+  const totalAnnualValue = benefits.reduce((sum, benefit) => sum + (benefit.annual_value || 0) * participantCount, 0);
+  const totalAttributableValue = benefits.reduce((sum, benefit) => 
+    sum + ((benefit.annual_value || 0) * participantCount * ((benefit.attribution_percentage || 0) / 100) * ((benefit.confidence_level || 0) / 100)), 0
+  );
 
   if (showForm) {
     return (
@@ -244,14 +362,23 @@ export default function Benefits() {
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Program Setup
               </Button>
-              <Button 
-                onClick={handleCalculateTotal}
-                disabled={benefits.length === 0}
-                className="bg-primary hover:bg-primary/90"
-              >
-                <Calculator className="h-4 w-4 mr-2" />
-                Calculate Total Value
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  disabled={!currentProgramId}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Saved
+                </Button>
+                <Button 
+                  onClick={handleCalculateTotal}
+                  disabled={benefits.length === 0}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  <Calculator className="h-4 w-4 mr-2" />
+                  Calculate Total Value
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

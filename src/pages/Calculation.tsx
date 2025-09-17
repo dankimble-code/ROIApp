@@ -11,6 +11,7 @@ interface CalculationPageState {
   organization: any;
   program: any;
   benefits: any[];
+  programId?: string;
 }
 
 export default function Calculation() {
@@ -45,7 +46,8 @@ export default function Calculation() {
       state: {
         organization,
         program,
-        benefits
+        benefits,
+        programId: state?.programId
       }
     });
   };
