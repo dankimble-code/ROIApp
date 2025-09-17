@@ -298,6 +298,134 @@ export default function Calculation() {
         </CardContent>
       </Card>
 
+      {/* Research Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Supporting Research on Executive Coaching ROI</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            Here are five recent research studies (2021–2025) that document the ROI of executive coaching:
+          </p>
+          
+          <div className="space-y-4">
+            <div className="border-l-4 border-l-primary pl-4">
+              <h4 className="font-semibold">1. Bravanti Research Study (2025):</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Analyzed data from 100 executives over five years. Found that participants reported an average ROI of nearly 84 times their initial coaching investment, demonstrating significant improvement in leadership effectiveness, innovation, and organizational culture.{" "}
+                <a 
+                  href="https://www.linkedin.com/pulse/executive-coaching-research-impact-return-alyssa-poggioli-w6dic" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [1]
+                </a>
+              </p>
+            </div>
+
+            <div className="border-l-4 border-l-primary pl-4">
+              <h4 className="font-semibold">2. FMI Corp Executive Coaching ROI Survey (2025):</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Surveyed company leaders in engineering and construction. Reported that executives saw an average ROI of nearly six times their investment, with 25% of clients experiencing an ROI between 10–49 times the cost of coaching. PWC and the Association Resource Center also found an average ROI of seven times the cost.{" "}
+                <a 
+                  href="https://fmicorp.com/reports/executive-coaching-driving-real-roi-for-leaders-in-engineering-and-construction" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [2]
+                </a>
+              </p>
+            </div>
+
+            <div className="border-l-4 border-l-primary pl-4">
+              <h4 className="font-semibold">3. MetrixGlobal Study (as cited 2024–2025):</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Published in multiple sources, this study concluded executive coaching yields a 788% ROI, attributed primarily to productivity gains and employee retention.{" "}
+                <a 
+                  href="https://luisazhou.com/blog/coaching-statistics/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [3]
+                </a>{" "}
+                <a 
+                  href="https://ardencoaching.com/returns-on-executive-coaching-programs/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [4]
+                </a>{" "}
+                <a 
+                  href="https://www.american.edu/provost/ogps/executive-education/executive-coaching/roi-of-executive-coaching.cfm" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [5]
+                </a>
+              </p>
+            </div>
+
+            <div className="border-l-4 border-l-primary pl-4">
+              <h4 className="font-semibold">4. Boysen et al. Study (2024):</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Focused on financial and intangible metrics of executive coaching. Respondents estimated ROI/economic benefits between $200,000 and $500,000 per intervention, factoring in recruitment cost savings, increased engagement, and productivity improvements.{" "}
+                <a 
+                  href="https://www.scirp.org/journal/paperinformation?paperid=134086" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [6]
+                </a>
+              </p>
+            </div>
+
+            <div className="border-l-4 border-l-primary pl-4">
+              <h4 className="font-semibold">5. International Coach Federation (ICF) Global Coaching Study (2023):</h4>
+              <p className="text-sm text-muted-foreground mt-1">
+                Survey of 100 executives showed an average ROI of almost six times the cost of coaching. 86% of companies were able to calculate a positive ROI, with a median ROI of seven times the investment across organizations.{" "}
+                <a 
+                  href="https://ardencoaching.com/returns-on-executive-coaching-programs/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [4]
+                </a>{" "}
+                <a 
+                  href="https://luisazhou.com/blog/coaching-statistics/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  [3]
+                </a>
+              </p>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground pt-4 border-t">
+            These studies provide robust evidence that executive coaching can yield substantial financial returns and improvement in individual and organizational performance over the past five years.
+          </p>
+
+          <div className="text-xs text-muted-foreground space-y-1 pt-2">
+            <p className="font-medium">Additional References:</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+              <a href="https://entrepreneurshq.com/coaching-industry-statistics/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">[7] Coaching Industry Statistics</a>
+              <a href="https://www.forbes.com/councils/forbescoachescouncil/2023/02/24/the-roi-of-executive-coaching-a-comprehensive-guide/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">[8] Forbes Coaches Council Guide</a>
+              <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10699640/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">[9] NCBI Research Article</a>
+              <a href="https://www.shrm.org/executive-network/insights/people-strategy/end-executive-coaching" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">[10] SHRM Executive Coaching Insights</a>
+              <a href="https://www.edgecumbe.co.uk/insights/executive-coaching-effectiveness/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">[11] Executive Coaching Effectiveness</a>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Action Buttons */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={handleStartOver}>
