@@ -46,8 +46,9 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex flex-col">
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
@@ -195,9 +196,10 @@ export default function Auth() {
           </CardContent>
         </Card>
       </div>
+      </div>
       
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 bg-primary/5 border-t border-primary/10 py-4">
+      <div className="bg-primary/5 border-t border-primary/10 py-4 mt-auto">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">
             © 2024 Resonance Executive Coaching • Professional Leadership Development • 
