@@ -29,7 +29,14 @@ export function Footer() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-3">
                 <Globe className="h-4 w-4 text-accent" />
-                <span>www.resonancecoaching.com</span>
+                <a 
+                  href="https://resonanceexecutivecoaching.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-accent transition-colors"
+                >
+                  www.resonancecoaching.com
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-accent" />
