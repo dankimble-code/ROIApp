@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, TrendingUp } from 'lucide-react';
+import { Footer } from './Footer';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -30,17 +31,24 @@ export function AppLayout({ children }: AppLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Enhanced Header */}
+      <header className="bg-primary/5 border-b border-primary/20 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center min-h-16 py-2">
-            <div className="flex items-center">
-              <img 
-                src="/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png" 
-                alt="Resonance Executive Coaching" 
-                className="h-12 w-auto"
-              />
+          <div className="flex justify-between items-center min-h-20 py-3">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png" 
+                  alt="Resonance Executive Coaching" 
+                  className="h-16 w-auto"
+                />
+                <div className="hidden sm:block">
+                  <h1 className="text-xl font-bold text-primary">Resonance Executive Coaching</h1>
+                  <p className="text-sm text-muted-foreground">Executive Leadership Development</p>
+                  <p className="text-xs text-muted-foreground/80 italic">by Daniel Kimble</p>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -70,9 +78,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {children}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
