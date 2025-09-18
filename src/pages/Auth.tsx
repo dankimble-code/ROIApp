@@ -49,24 +49,38 @@ export default function Auth() {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
-        <div className="text-center lg:text-left space-y-6">
-          <div className="flex justify-center lg:justify-start mb-6">
-            <img 
-              src={resonanceLogo} 
-              alt="Resonance Executive Coaching" 
-              className="h-16 w-auto"
-            />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight text-foreground">
-              Resonance Executive Coaching ROI Dashboard
-            </h1>
-            <p className="text-lg text-muted-foreground font-medium">
-              by Daniel Kimble
-            </p>
-            <p className="text-xl text-muted-foreground">
-              Measure, analyze, and optimize your coaching program investments with precision
-            </p>
+        <div className="text-center lg:text-left space-y-8">
+          <div className="space-y-4">
+            <div className="flex justify-center lg:justify-start mb-4">
+              <img 
+                src={resonanceLogo} 
+                alt="Resonance Executive Coaching" 
+                className="h-24 w-auto"
+              />
+            </div>
+            <div className="space-y-3">
+              <h1 className="text-5xl font-bold tracking-tight text-primary">
+                Resonance Executive Coaching
+              </h1>
+              <h2 className="text-2xl font-semibold text-foreground">
+                ROI Dashboard & Analytics Platform
+              </h2>
+              <p className="text-lg text-muted-foreground font-medium italic">
+                Executive Leadership Development by Daniel Kimble
+              </p>
+              <p className="text-xl text-muted-foreground leading-relaxed">
+                Transform your coaching investments into measurable business outcomes with 
+                evidence-based ROI analysis and comprehensive program optimization tools.
+              </p>
+            </div>
+            
+            {/* Professional Credentials Badge */}
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-primary">Professional Excellence</p>
+              <p className="text-xs text-muted-foreground">
+                ICF Certified • 15+ Years Experience • Fortune 500 Portfolio • Evidence-Based Methodology
+              </p>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
@@ -102,12 +116,17 @@ export default function Auth() {
         </div>
 
         {/* Auth Form */}
-        <Card className="w-full max-w-md mx-auto">
-          <CardHeader className="text-center">
-            <CardTitle>Get Started</CardTitle>
-            <CardDescription>
-              Sign in to access your coaching ROI dashboard
-            </CardDescription>
+        <Card className="w-full max-w-md mx-auto shadow-xl border-primary/20">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <Target className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl">Welcome to Resonance</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Access your executive coaching ROI analytics platform
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
@@ -178,6 +197,16 @@ export default function Auth() {
             </Tabs>
           </CardContent>
         </Card>
+      </div>
+      
+      {/* Footer */}
+      <div className="absolute bottom-0 left-0 right-0 bg-primary/5 border-t border-primary/10 py-4">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            © 2024 Resonance Executive Coaching • Professional Leadership Development • 
+            <span className="font-medium">Daniel Kimble, ICF Certified Executive Coach</span>
+          </p>
+        </div>
       </div>
     </div>
   );
