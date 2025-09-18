@@ -118,7 +118,17 @@ export default function Calculation() {
           sources: [
             'Program Investment and Benefits Data',
             'ROI Calculation Methodology',
-            'Resonance Executive Coaching ROI Dashboard'
+            'Resonance Executive Coaching ROI Dashboard',
+            'Bravanti Research Study (2025): Executive coaching ROI analysis of 100 executives over five years. https://www.linkedin.com/pulse/executive-coaching-research-impact-return-alyssa-poggioli-w6dic',
+            'FMI Corp Executive Coaching ROI Survey (2025): Engineering and construction industry executive coaching ROI study. https://fmicorp.com/reports/executive-coaching-driving-real-roi-for-leaders-in-engineering-and-construction',
+            'MetrixGlobal Study (2024-2025): Executive coaching yields 788% ROI through productivity gains and employee retention. https://luisazhou.com/blog/coaching-statistics/',
+            'Boysen et al. Study (2024): Financial and intangible metrics of executive coaching with ROI estimates of $200,000-$500,000 per intervention. https://www.scirp.org/journal/paperinformation?paperid=134086',
+            'International Coach Federation (ICF) Global Coaching Study (2023): Survey of 100 executives showing average ROI of 6x coaching cost. https://ardencoaching.com/returns-on-executive-coaching-programs/',
+            'Coaching Industry Statistics: Comprehensive industry data and trends. https://entrepreneurshq.com/coaching-industry-statistics/',
+            'Forbes Coaches Council (2023): The ROI of Executive Coaching - A Comprehensive Guide. https://www.forbes.com/councils/forbescoachescouncil/2023/02/24/the-roi-of-executive-coaching-a-comprehensive-guide/',
+            'NCBI Research Article: Peer-reviewed research on executive coaching effectiveness. https://pmc.ncbi.nlm.nih.gov/articles/PMC10699640/',
+            'SHRM Executive Coaching Insights: Human resources perspective on executive coaching ROI. https://www.shrm.org/executive-network/insights/people-strategy/end-executive-coaching',
+            'Executive Coaching Effectiveness Study: Comprehensive analysis of coaching program effectiveness. https://www.edgecumbe.co.uk/insights/executive-coaching-effectiveness/'
           ],
           author: 'Resonance Executive Coaching'
         }
