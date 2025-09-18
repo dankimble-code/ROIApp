@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
+import { BrandedLoader } from '@/components/ui/branded-loader';
 // Using the correct logo from uploads
 const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
 
@@ -18,11 +19,12 @@ export default function Auth() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
+        <BrandedLoader 
+          size="xl" 
+          message="Connecting to Resonance Platform..." 
+          variant="resonance"
+        />
       </div>
     );
   }

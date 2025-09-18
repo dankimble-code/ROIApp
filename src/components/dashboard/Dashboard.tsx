@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { BrandedLoader } from '@/components/ui/branded-loader';
 
 export function Dashboard() {
   const [showWizard, setShowWizard] = useState(false);
@@ -88,21 +89,31 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
 
   return (
     <TooltipProvider>
-      <div className="space-y-8">
+      <div className="space-y-8 brand-watermark resonance-pattern">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-gradient-card rounded-lg p-6 shadow-resonance">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">ROI Dashboard</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              ROI Dashboard
+            </h1>
+            <p className="text-muted-foreground text-lg">
               Track and analyze the return on investment of your coaching programs
             </p>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="outline" className="text-xs">
+                Resonance Executive Coaching
+              </Badge>
+              <Badge variant="secondary" className="text-xs">
+                by Daniel Kimble
+              </Badge>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onExportPDF}>
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onExportPDF} className="shadow-sm hover:shadow-md transition-resonance">
               <FileDown className="mr-2 h-4 w-4" />
               Export PDF
             </Button>
-            <Button onClick={onShowWizard}>
+            <Button onClick={onShowWizard} className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-md hover:shadow-lg transition-resonance">
               <Plus className="mr-2 h-4 w-4" />
               New Program
             </Button>
@@ -110,27 +121,27 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Programs</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <Target className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalPrograms}</div>
+              <div className="text-2xl font-bold text-primary">{totalPrograms}</div>
               <p className="text-xs text-muted-foreground">
-                {isLoading ? 'Loading...' : 'Total coaching programs'}
+                {isLoading ? <BrandedLoader size="sm" message="" variant="spinner" /> : 'Total coaching programs'}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average ROI</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {formatPercentage(averageROI)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -142,26 +153,26 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Investment</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalInvestment)}</div>
+              <div className="text-2xl font-bold text-secondary">{formatCurrency(totalInvestment)}</div>
               <p className="text-xs text-muted-foreground">
                 Across all programs
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Participants</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalParticipants}</div>
+              <div className="text-2xl font-bold text-primary">{totalParticipants}</div>
               <p className="text-xs text-muted-foreground">
                 Total coaching participants
               </p>
@@ -210,21 +221,22 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
         <Separator />
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="programs" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="programs" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Programs
-            </TabsTrigger>
-            <TabsTrigger value="benchmarks" className="flex items-center gap-2">
-              <PieChart className="h-4 w-4" />
-              Benchmarks
-            </TabsTrigger>
-            <TabsTrigger value="compare" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Compare
-            </TabsTrigger>
-          </TabsList>
+        <div className="bg-gradient-card rounded-lg p-6 shadow-resonance">
+          <Tabs defaultValue="programs" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 bg-primary/10">
+              <TabsTrigger value="programs" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <BarChart3 className="h-4 w-4" />
+                Programs
+              </TabsTrigger>
+              <TabsTrigger value="benchmarks" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <PieChart className="h-4 w-4" />
+                Benchmarks
+              </TabsTrigger>
+              <TabsTrigger value="compare" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                <TrendingUp className="h-4 w-4" />
+                Compare
+              </TabsTrigger>
+            </TabsList>
 
           <TabsContent value="programs" className="space-y-4">
             <ProgramList onCompare={onCompare} />
@@ -246,7 +258,8 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
               </Button>
             </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </div>
     </TooltipProvider>
   );

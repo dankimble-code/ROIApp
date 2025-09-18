@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut, TrendingUp } from 'lucide-react';
 import { Footer } from './Footer';
+import { BrandedLoader } from '@/components/ui/branded-loader';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -16,11 +17,12 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
+        <BrandedLoader 
+          size="xl" 
+          message="Initializing Your ROI Dashboard..." 
+          variant="resonance"
+        />
       </div>
     );
   }
