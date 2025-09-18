@@ -118,9 +118,6 @@ export default function Auth() {
         {/* Auth Form */}
         <Card className="w-full max-w-md mx-auto shadow-xl border-primary/20">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-              <Target className="h-8 w-8 text-primary" />
-            </div>
             <div>
               <CardTitle className="text-2xl">Welcome to Resonance</CardTitle>
               <CardDescription className="text-base mt-2">
