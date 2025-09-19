@@ -10,61 +10,47 @@ import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
 import { BrandedLoader } from '@/components/ui/branded-loader';
 // Using the correct logo from uploads
 const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
-
 export default function Auth() {
-  const { user, signIn, signUp, loading } = useAuth();
+  const {
+    user,
+    signIn,
+    signUp,
+    loading
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
-        <BrandedLoader 
-          size="xl" 
-          message="Connecting to Resonance Platform..." 
-          variant="resonance"
-        />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
+        <BrandedLoader size="xl" message="Connecting to Resonance Platform..." variant="resonance" />
+      </div>;
   }
-
   if (user) {
     return <Navigate to="/" replace />;
   }
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     await signIn(email, password);
     setIsSubmitting(false);
   };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     await signUp(email, password);
     setIsSubmitting(false);
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex flex-col">
+  return <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <div className="flex justify-center lg:justify-start mb-4">
-              <img 
-                src={resonanceLogo} 
-                alt="Resonance Executive Coaching" 
-                className="h-24 w-auto"
-              />
+              <img src={resonanceLogo} alt="Resonance Executive Coaching" className="h-24 w-auto" />
             </div>
             <div className="space-y-3">
-              <h1 className="text-5xl font-bold tracking-tight text-primary">
-                Resonance Executive Coaching
-              </h1>
+              
               <h2 className="text-2xl font-semibold text-foreground">
                 ROI Dashboard & Analytics Platform
               </h2>
@@ -139,25 +125,11 @@ export default function Auth() {
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                    <Input id="signin-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <Input id="signin-password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
                   </div>
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? 'Signing In...' : 'Sign In'}
@@ -169,25 +141,11 @@ export default function Auth() {
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                    <Input id="signup-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Create a password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <Input id="signup-password" type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} required />
                   </div>
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? 'Creating Account...' : 'Create Account'}
@@ -209,6 +167,5 @@ export default function Auth() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
