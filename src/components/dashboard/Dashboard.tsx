@@ -35,8 +35,7 @@ export function Dashboard() {
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
 
   const handleExportPDF = () => {
-    // exportToPDF(); // TODO: Implement PDF export
-    console.log('PDF export not yet implemented');
+    console.log('Export initiated from dashboard');
   };
 
   const handleCompare = (programIds: string[]) => {
@@ -87,6 +86,49 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
   // Simplified program data for now - avoiding hook rule violations  
   const programsWithROI: any[] = []; // Will be populated properly in individual program detail views
 
+  const handleExportPDF = async () => {
+    try {
+      const { PDFExportService } = await import('@/lib/pdf-export');
+      const pdfService = new PDFExportService();
+      
+      // Create dashboard data from current component state
+      const dashboardData = {
+        programs: programs.map(p => ({ 
+          ...p, 
+          organization: { 
+            id: p.organization_id || 'temp-id',
+            user_id: 'temp-user-id',
+            name: p.organization?.name || 'Unknown Organization',
+            industry: p.organization?.industry || 'Not specified',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          } 
+        })),
+        stats: {
+          activePrograms: totalPrograms,
+          averageROI: averageROI,
+          totalInvestment: totalInvestment,
+          totalParticipants: totalParticipants
+        }
+      };
+
+      await pdfService.exportDashboard(dashboardData, {
+        title: 'Executive Coaching ROI Dashboard Report',
+        subtitle: 'Comprehensive analysis of coaching programs and their return on investment',
+        includeLogo: true,
+        includeFootnotes: true,
+        sources: [
+          'Resonance Executive Coaching Internal Analytics',
+          'Industry benchmarks from PwC, MetrixGlobal, and Center for Creative Leadership studies',
+          'Program data collected from organization assessments and participant feedback'
+        ],
+        author: 'Resonance Executive Coaching'
+      });
+    } catch (error) {
+      console.error('Error exporting dashboard PDF:', error);
+    }
+  };
+
   return (
     <TooltipProvider>
       <div className="space-y-8 brand-watermark resonance-pattern">
@@ -109,7 +151,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </div>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={onExportPDF} className="shadow-sm hover:shadow-md transition-resonance">
+            <Button variant="outline" onClick={handleExportPDF} className="shadow-sm hover:shadow-md transition-resonance">
               <FileDown className="mr-2 h-4 w-4" />
               Export PDF
             </Button>
