@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Eye, Copy, Trash2, FileText } from 'lucide-react';
+import { MoreHorizontal, Eye, Copy, Trash2, FileText, Edit } from 'lucide-react';
 import { ProgramDetailView } from './ProgramDetailView';
+import { ProgramWizard } from '@/components/wizard/ProgramWizard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ interface ProgramListProps {
 export function ProgramList({ onCompare }: ProgramListProps) {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [viewingProgram, setViewingProgram] = useState<string | null>(null);
+  const [editingProgram, setEditingProgram] = useState<string | null>(null);
   
   const { data: programs = [], isLoading } = usePrograms();
   const deleteProgram = useDeleteProgram();
@@ -35,6 +37,10 @@ export function ProgramList({ onCompare }: ProgramListProps) {
 
   const handleViewDetails = (programId: string) => {
     setViewingProgram(programId);
+  };
+
+  const handleEdit = (programId: string) => {
+    setEditingProgram(programId);
   };
 
   const toggleProgramSelection = (programId: string) => {
@@ -59,6 +65,20 @@ export function ProgramList({ onCompare }: ProgramListProps) {
         <ProgramDetailView 
           program={program}
           onBack={() => setViewingProgram(null)}
+        />
+      );
+    }
+  }
+
+  // Show program wizard for editing if one is selected
+  if (editingProgram) {
+    const program = programs.find(p => p.id === editingProgram);
+    if (program) {
+      return (
+        <ProgramWizard 
+          editingProgram={program}
+          onComplete={() => setEditingProgram(null)}
+          onCancel={() => setEditingProgram(null)}
         />
       );
     }
@@ -154,6 +174,13 @@ export function ProgramList({ onCompare }: ProgramListProps) {
                       }}>
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(program.id);
+                      }}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();

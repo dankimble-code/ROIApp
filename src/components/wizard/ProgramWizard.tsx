@@ -8,26 +8,41 @@ import { ProgramStep } from './steps/ProgramStep';
 import { BenefitsStep } from './steps/BenefitsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { Organization, Program, Benefit } from '@/types/coaching';
-import { useCreateOrganization } from '@/hooks/useOrganizations';
-import { useCreateProgram } from '@/hooks/usePrograms';
+import { useCreateOrganization, useUpdateOrganization } from '@/hooks/useOrganizations';
+import { useCreateProgram, useUpdateProgram } from '@/hooks/usePrograms';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { UnsavedChangesDialog } from '@/components/ui/unsaved-changes-dialog';
 
 interface ProgramWizardProps {
   onComplete: () => void;
   onCancel: () => void;
+  editingProgram?: Program & { organization?: Organization };
 }
 
-export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
+export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [organization, setOrganization] = useState<Partial<Organization>>({});
-  const [program, setProgram] = useState<Partial<Program>>({});
+  const [organization, setOrganization] = useState<Partial<Organization>>(
+    editingProgram?.organization ? { ...editingProgram.organization } : {}
+  );
+  const [program, setProgram] = useState<Partial<Program>>(
+    editingProgram ? { 
+      name: editingProgram.name,
+      duration_months: editingProgram.duration_months,
+      participants_count: editingProgram.participants_count,
+      cost_per_participant: editingProgram.cost_per_participant,
+      overhead_costs: editingProgram.overhead_costs,
+    } : {}
+  );
   const [benefits, setBenefits] = useState<Partial<Benefit>[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const createOrganization = useCreateOrganization();
   const createProgram = useCreateProgram();
+  const updateOrganization = useUpdateOrganization();
+  const updateProgram = useUpdateProgram();
+
+  const isEditing = !!editingProgram;
 
   // Track unsaved changes
   const { showPrompt, confirmNavigation, cancelNavigation, promptNavigation } = useUnsavedChanges({
@@ -69,28 +84,53 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
   const handleComplete = async () => {
     try {
       setIsSaving(true);
-      // Create organization first
-      const orgData = await createOrganization.mutateAsync({
-        name: organization.name!,
-        industry: organization.industry,
-        employee_count: organization.employee_count,
-      });
+      
+      if (isEditing && editingProgram) {
+        // Update existing organization and program
+        if (editingProgram.organization?.id) {
+          await updateOrganization.mutateAsync({
+            id: editingProgram.organization.id,
+            data: {
+              name: organization.name!,
+              industry: organization.industry,
+              employee_count: organization.employee_count,
+            }
+          });
+        }
 
-      // Then create program
-      await createProgram.mutateAsync({
-        organization_id: orgData.id,
-        name: program.name!,
-        duration_months: program.duration_months!,
-        participants_count: program.participants_count!,
-        cost_per_participant: program.cost_per_participant!,
-        overhead_costs: program.overhead_costs || 0,
-      });
+        await updateProgram.mutateAsync({
+          id: editingProgram.id,
+          data: {
+            name: program.name!,
+            duration_months: program.duration_months!,
+            participants_count: program.participants_count!,
+            cost_per_participant: program.cost_per_participant!,
+            overhead_costs: program.overhead_costs || 0,
+          }
+        });
+      } else {
+        // Create new organization and program
+        const orgData = await createOrganization.mutateAsync({
+          name: organization.name!,
+          industry: organization.industry,
+          employee_count: organization.employee_count,
+        });
+
+        await createProgram.mutateAsync({
+          organization_id: orgData.id,
+          name: program.name!,
+          duration_months: program.duration_months!,
+          participants_count: program.participants_count!,
+          cost_per_participant: program.cost_per_participant!,
+          overhead_costs: program.overhead_costs || 0,
+        });
+      }
 
       // Mark as saved
       setHasUnsavedChanges(false);
       onComplete();
     } catch (error) {
-      console.error('Error creating program:', error);
+      console.error('Error saving program:', error);
       setIsSaving(false);
     }
   };
@@ -155,9 +195,11 @@ export function ProgramWizard({ onComplete, onCancel }: ProgramWizardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Create New Program</h1>
+          <h1 className="text-3xl font-bold text-foreground">
+            {isEditing ? 'Edit Program' : 'Create New Program'}
+          </h1>
           <p className="text-muted-foreground">
-            Set up a new executive coaching program for ROI analysis
+            {isEditing ? 'Modify your existing executive coaching program' : 'Set up a new executive coaching program for ROI analysis'}
           </p>
         </div>
         <Button variant="outline" onClick={handleCancel}>
