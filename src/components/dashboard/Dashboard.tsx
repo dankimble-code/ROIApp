@@ -281,7 +281,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </TabsList>
 
           <TabsContent value="programs" className="space-y-4">
-            <ProgramList onCompare={onCompare} />
+            <ProgramList onCompare={onCompare} onShowWizard={onShowWizard} />
           </TabsContent>
 
           <TabsContent value="benchmarks" className="space-y-4">

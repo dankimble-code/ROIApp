@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Eye, Copy, Trash2, FileText, Edit } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
+import { MoreHorizontal, Eye, Copy, Trash2, FileText, Edit, Plus } from 'lucide-react';
 import { ProgramDetailView } from './ProgramDetailView';
 import { ProgramWizard } from '@/components/wizard/ProgramWizard';
 import {
@@ -16,9 +17,10 @@ import { usePrograms, useDeleteProgram, useDuplicateProgram } from '@/hooks/useP
 
 interface ProgramListProps {
   onCompare: (programIds: string[]) => void;
+  onShowWizard?: () => void;
 }
 
-export function ProgramList({ onCompare }: ProgramListProps) {
+export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [viewingProgram, setViewingProgram] = useState<string | null>(null);
   const [editingProgram, setEditingProgram] = useState<string | null>(null);
@@ -95,13 +97,17 @@ export function ProgramList({ onCompare }: ProgramListProps) {
 
   if (programs.length === 0) {
     return (
-      <div className="text-center py-12">
-        <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Programs Yet</h3>
-        <p className="text-muted-foreground mb-4">
-          Create your first executive coaching program to start analyzing ROI.
-        </p>
-      </div>
+      <EmptyState
+        variant="branded"
+        icon={<FileText className="h-12 w-12" />}
+        title="No Programs Yet"
+        description="Create your first executive coaching program to start analyzing ROI and tracking performance metrics."
+        action={onShowWizard ? {
+          label: "Create Your First Program",
+          onClick: onShowWizard,
+          variant: 'default'
+        } : undefined}
+      />
     );
   }
 
