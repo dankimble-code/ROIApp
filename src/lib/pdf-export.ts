@@ -70,29 +70,72 @@ export class PDFExportService {
   }
 
   private addHeader(title: string, subtitle?: string, includeLogo: boolean = true): void {
+    // Professional letterhead with company branding
     if (includeLogo) {
       // Logo will be added asynchronously
-      this.currentY += this.logoHeight + 10;
+      this.currentY += this.logoHeight + 5;
     }
 
-    // Title
-    this.doc.setFontSize(24);
+    // Company name and branding
+    this.doc.setFontSize(18);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text(title, 20, this.currentY);
+    this.doc.setTextColor(51, 65, 122); // Primary color equivalent
+    this.doc.text('RESONANCE EXECUTIVE COACHING', 20, this.currentY);
+    this.currentY += 8;
+    
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.setTextColor(100, 100, 100);
+    this.doc.text('Executive Leadership Development', 20, this.currentY);
     this.currentY += 12;
+
+    // Contact information line
+    this.doc.setFontSize(10);
+    this.doc.text('daniel@resonanceexecutivecoaching.com | 408-518-1185 | resonanceexecutivecoaching.com', 20, this.currentY);
+    this.currentY += 15;
+
+    // Document classification
+    this.doc.setFillColor(245, 245, 250);
+    this.doc.rect(20, this.currentY - 3, this.pageWidth - 40, 12, 'F');
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(51, 65, 122);
+    this.doc.text('CONFIDENTIAL ROI ANALYSIS BY RESONANCE EXECUTIVE COACHING', 25, this.currentY + 5);
+    this.currentY += 18;
+
+    // Title
+    this.doc.setFontSize(20);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(0, 0, 0);
+    this.doc.text(title, 20, this.currentY);
+    this.currentY += 10;
 
     // Subtitle
     if (subtitle) {
-      this.doc.setFontSize(14);
+      this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'normal');
       this.doc.setTextColor(100, 100, 100);
       this.doc.text(subtitle, 20, this.currentY);
       this.currentY += 8;
     }
 
-    // Reset color
+    // Generation timestamp
+    this.doc.setFontSize(10);
+    this.doc.setTextColor(150, 150, 150);
+    const timestamp = new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }) + ' at ' + new Date().toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit'
+    });
+    this.doc.text(`Generated on: ${timestamp}`, 20, this.currentY);
+    this.currentY += 15;
+
+    // Reset color for content
     this.doc.setTextColor(0, 0, 0);
-    this.currentY += 10;
   }
 
   private addSection(title: string): void {

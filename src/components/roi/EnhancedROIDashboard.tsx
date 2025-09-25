@@ -24,6 +24,7 @@ import { ROIChart } from './ROIChart';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PDFExportService } from '@/lib/pdf-export';
+import { BrandedHeader } from './BrandedHeader';
 
 interface EnhancedROIDashboardProps {
   program: Program & { organization: { name: string } };
@@ -130,17 +131,23 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
   return (
     <TooltipProvider>
       <div className="space-y-6">
-        {/* Header with Key Metrics */}
+        {/* Branded Header */}
+        <BrandedHeader 
+          title={`ROI Analysis: ${program.name}`}
+          subtitle={`${program.organization.name} • ${program.participants_count} participants • ${program.duration_months} months`}
+        />
+
+        {/* Key Metrics Card */}
         <Card>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
-                  ROI Analysis: {program.name}
+                  Key Performance Metrics
                 </CardTitle>
                 <p className="text-muted-foreground mt-1">
-                  {program.organization.name} • {program.participants_count} participants • {program.duration_months} months
+                  Financial analysis and return on investment calculations
                 </p>
               </div>
               <div className="flex items-center gap-2">
