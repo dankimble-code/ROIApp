@@ -100,7 +100,7 @@ export function Footer() {
               © 2024 Resonance Executive Coaching. All rights reserved.
             </p>
             <div className="flex space-x-6 text-xs text-primary-foreground/60">
-              <span>Privacy Policy</span>
+              <a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a>
               <span>Terms of Service</span>
               <span>Professional Standards</span>
             </div>
