@@ -6,10 +6,12 @@ import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { OrganizationStep } from './steps/OrganizationStep';
 import { ProgramStep } from './steps/ProgramStep';
 import { BenefitsStep } from './steps/BenefitsStep';
+import { PrefilledBenefitsStep } from './steps/PrefilledBenefitsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { Organization, Program, Benefit } from '@/types/coaching';
 import { useCreateOrganization, useUpdateOrganization } from '@/hooks/useOrganizations';
 import { useCreateProgram, useUpdateProgram } from '@/hooks/usePrograms';
+import { useBulkCreateBenefits } from '@/hooks/useBenefits';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { UnsavedChangesDialog } from '@/components/ui/unsaved-changes-dialog';
 
@@ -26,6 +28,7 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
   );
   const [program, setProgram] = useState<Partial<Program>>(
     editingProgram ? { 
+      id: editingProgram.id,
       name: editingProgram.name,
       duration_months: editingProgram.duration_months,
       participants_count: editingProgram.participants_count,
@@ -36,11 +39,13 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
   const [benefits, setBenefits] = useState<Partial<Benefit>[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [createdProgramId, setCreatedProgramId] = useState<string | undefined>(editingProgram?.id);
 
   const createOrganization = useCreateOrganization();
   const createProgram = useCreateProgram();
   const updateOrganization = useUpdateOrganization();
   const updateProgram = useUpdateProgram();
+  const bulkCreateBenefits = useBulkCreateBenefits();
 
   const isEditing = !!editingProgram;
 
@@ -69,8 +74,11 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
   const totalSteps = steps.length;
   const progress = (currentStep / totalSteps) * 100;
 
-  const handleNext = () => {
-    if (currentStep < totalSteps) {
+  const handleNext = async () => {
+    if (currentStep === 2 && currentStep + 1 === 3) {
+      // Auto-create benefits when moving from Program Details to Benefits
+      await createProgramAndBenefits();
+    } else if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -81,9 +89,11 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
     }
   };
 
-  const handleComplete = async () => {
+  const createProgramAndBenefits = async () => {
     try {
       setIsSaving(true);
+      
+      let orgData, programData;
       
       if (isEditing && editingProgram) {
         // Update existing organization and program
@@ -96,9 +106,10 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
               employee_count: organization.employee_count,
             }
           });
+          orgData = editingProgram.organization;
         }
 
-        await updateProgram.mutateAsync({
+        programData = await updateProgram.mutateAsync({
           id: editingProgram.id,
           data: {
             name: program.name!,
@@ -108,15 +119,16 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
             overhead_costs: program.overhead_costs || 0,
           }
         });
+        setCreatedProgramId(editingProgram.id);
       } else {
         // Create new organization and program
-        const orgData = await createOrganization.mutateAsync({
+        orgData = await createOrganization.mutateAsync({
           name: organization.name!,
           industry: organization.industry,
           employee_count: organization.employee_count,
         });
 
-        await createProgram.mutateAsync({
+        programData = await createProgram.mutateAsync({
           organization_id: orgData.id,
           name: program.name!,
           duration_months: program.duration_months!,
@@ -124,13 +136,89 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
           cost_per_participant: program.cost_per_participant!,
           overhead_costs: program.overhead_costs || 0,
         });
+        setCreatedProgramId(programData.id);
       }
 
+      // Create default benefits
+      const defaultBenefits = [
+        {
+          program_id: programData.id,
+          category: 'Customer Satisfaction',
+          description: 'Improved customer relationships and satisfaction scores per participant',
+          annual_value: 10000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+        {
+          program_id: programData.id,
+          category: 'Innovation',
+          description: 'Increased innovation and creative problem-solving per participant',
+          annual_value: 10000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+        {
+          program_id: programData.id,
+          category: 'Decision Making',
+          description: 'Better decision-making per participant leading to cost savings and opportunities',
+          annual_value: 10000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+        {
+          program_id: programData.id,
+          category: 'Retention Improvement',
+          description: 'Reduced turnover costs per participant through improved employee satisfaction',
+          annual_value: 15000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+        {
+          program_id: programData.id,
+          category: 'Team Effectiveness',
+          description: 'Improved collaboration and team dynamics per participant',
+          annual_value: 10000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+        {
+          program_id: programData.id,
+          category: 'Performance Enhancement',
+          description: 'Improved individual performance metrics per participant',
+          annual_value: 10000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+        {
+          program_id: programData.id,
+          category: 'Productivity Gains',
+          description: 'Increased productivity from improved focus and time management skills per participant',
+          annual_value: 10000,
+          attribution_percentage: 50,
+          confidence_level: 80,
+        },
+      ];
+
+      await bulkCreateBenefits.mutateAsync(defaultBenefits);
+      
+      // Navigate directly to the calculation page with the program
+      setCurrentStep(currentStep + 1);
+      setIsSaving(false);
+    } catch (error) {
+      console.error('Error creating program and benefits:', error);
+      setIsSaving(false);
+    }
+  };
+
+  const handleComplete = async () => {
+    try {
+      setIsSaving(true);
+      
       // Mark as saved
       setHasUnsavedChanges(false);
       onComplete();
     } catch (error) {
-      console.error('Error saving program:', error);
+      console.error('Error completing program:', error);
       setIsSaving(false);
     }
   };
@@ -165,11 +253,10 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
         );
       case 3:
         return (
-          <BenefitsStep
-            data={benefits}
-            onChange={setBenefits}
+          <PrefilledBenefitsStep
             onNext={handleNext}
             onBack={handleBack}
+            programId={createdProgramId}
             participantCount={program.participants_count || 1}
             organization={organization}
             program={program}

@@ -1,0 +1,173 @@
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Organization, Program } from '@/types/coaching';
+import { useBenefits } from '@/hooks/useBenefits';
+import { EnhancedROIDashboard } from '@/components/roi/EnhancedROIDashboard';
+import { BrandSection, MetricCard } from '@/components/ui/brand-elements';
+import { TrendingUp, Users, Target, DollarSign } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+
+interface PrefilledBenefitsStepProps {
+  onNext: () => void;
+  onBack: () => void;
+  programId?: string;
+  participantCount?: number;
+  organization?: Partial<Organization>;
+  program?: Partial<Program>;
+}
+
+export function PrefilledBenefitsStep({ 
+  onNext, 
+  onBack, 
+  programId, 
+  participantCount = 1, 
+  organization, 
+  program 
+}: PrefilledBenefitsStepProps) {
+  const navigate = useNavigate();
+  const { data: benefits = [], isLoading } = useBenefits(programId);
+
+  // Calculate totals
+  const totalAnnualValue = benefits.reduce((sum, benefit) => 
+    sum + (benefit.annual_value * participantCount), 0
+  );
+  
+  const totalExpectedImpact = benefits.reduce((sum, benefit) => 
+    sum + (benefit.annual_value * participantCount * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100)), 0
+  );
+
+  const handleCalculateTotal = () => {
+    if (programId) {
+      navigate(`/calculation/${programId}`);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Create a mock program object for the ROI dashboard
+  const dashboardProgram = {
+    id: programId!,
+    name: program?.name || 'Executive Coaching Program',
+    duration_months: program?.duration_months || 12,
+    participants_count: program?.participants_count || participantCount,
+    cost_per_participant: program?.cost_per_participant || 5000,
+    overhead_costs: program?.overhead_costs || 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    organization_id: 'temp',
+    organization: {
+      id: 'temp',
+      name: organization?.name || 'Organization',
+      industry: organization?.industry || 'Technology',
+      employee_count: organization?.employee_count || 100,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Program Benefits Summary */}
+      <BrandSection>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-resonance-navy dark:text-white">
+            <Target className="h-5 w-5" />
+            Program Benefits & Expected Outcomes
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <MetricCard
+              title="Total Annual Value (All Participants)"
+              value={formatCurrency(totalAnnualValue)}
+              description={`Per participant: ${formatCurrency(totalAnnualValue / participantCount)}`}
+            />
+            <MetricCard
+              title="Expected Impact (All Participants)"
+              value={formatCurrency(totalExpectedImpact)}
+              description={`Per participant: ${formatCurrency(totalExpectedImpact / participantCount)}`}
+            />
+          </div>
+
+          <Separator className="bg-resonance-navy/20" />
+
+          {/* Benefits List */}
+          <div className="grid gap-4">
+            {benefits.map((benefit, index) => (
+              <Card key={index} className="border-resonance-orange/20 hover:border-resonance-orange/40 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-resonance-navy dark:text-white">
+                          {benefit.category}
+                        </h4>
+                        <Badge variant="outline" className="border-resonance-orange text-resonance-orange">
+                          {benefit.attribution_percentage}% attribution
+                        </Badge>
+                        <Badge variant="outline" className="border-resonance-navy text-resonance-navy dark:border-white dark:text-white">
+                          {benefit.confidence_level}% confidence
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {benefit.description}
+                      </p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <div className="space-y-1">
+                        <div className="text-sm text-muted-foreground">Per Participant:</div>
+                        <div className="font-semibold text-resonance-navy dark:text-white">
+                          {formatCurrency(benefit.annual_value)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Expected Impact:</div>
+                        <div className="font-semibold text-resonance-orange">
+                          {formatCurrency(benefit.annual_value * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100))}
+                        </div>
+                      </div>
+                      <Separator className="bg-resonance-navy/20" />
+                      <div className="space-y-1">
+                        <div className="text-sm text-muted-foreground">Total:</div>
+                        <div className="font-semibold text-resonance-navy dark:text-white">
+                          {formatCurrency(benefit.annual_value * participantCount)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Total:</div>
+                        <div className="font-semibold text-resonance-orange">
+                          {formatCurrency(benefit.annual_value * participantCount * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-between pt-4">
+            <Button type="button" variant="outline" onClick={onBack}>
+              Back to Program Setup
+            </Button>
+            <Button onClick={handleCalculateTotal} className="bg-resonance-orange hover:bg-resonance-orange/90">
+              Calculate Total Value
+            </Button>
+          </div>
+        </CardContent>
+      </BrandSection>
+
+      {/* Full ROI Dashboard */}
+      <EnhancedROIDashboard program={dashboardProgram} />
+    </div>
+  );
+}
