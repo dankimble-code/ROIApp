@@ -24,16 +24,20 @@ export function BrandedHeader({
           {/* Logo and company information */}
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0">
-              <img 
-                src={resonanceLogo} 
-                alt="Resonance Executive Coaching Logo" 
-                className="h-12 w-auto"
-              />
+              <a 
+                href="https://resonanceexecutivecoaching.com/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:opacity-80 transition-opacity"
+              >
+                <img 
+                  src={resonanceLogo} 
+                  alt="Resonance Executive Coaching Logo" 
+                  className="h-12 w-auto"
+                />
+              </a>
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-primary">
-                Resonance Executive Coaching
-              </h1>
               <p className="text-sm text-muted-foreground font-medium">
                 Executive Leadership Development
               </p>
