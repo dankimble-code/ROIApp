@@ -35,20 +35,37 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="hover:text-accent transition-colors"
                 >
-                  www.resonancecoaching.com
+                  resonanceexecutivecoaching.com
                 </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-accent" />
-                <span>info@resonancecoaching.com</span>
+                <a 
+                  href="mailto:daniel@resonanceexecutivecoaching.com"
+                  className="hover:text-accent transition-colors"
+                >
+                  daniel@resonanceexecutivecoaching.com
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-accent" />
-                <span>Schedule Your Consultation</span>
+                <a 
+                  href="tel:+14085181185"
+                  className="hover:text-accent transition-colors"
+                >
+                  408-518-1185
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Users className="h-4 w-4 text-accent" />
-                <span>LinkedIn: Daniel Kimble</span>
+                <a 
+                  href="https://www.linkedin.com/in/dankimble/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-accent transition-colors"
+                >
+                  LinkedIn: Daniel Kimble
+                </a>
               </div>
             </div>
           </div>
