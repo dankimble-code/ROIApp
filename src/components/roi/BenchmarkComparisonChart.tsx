@@ -50,27 +50,27 @@ export function BenchmarkComparisonChart({
       name: 'Industry\nMinimum',
       roi: comparison.benchmark.roiRange.min,
       type: 'benchmark',
-      color: 'hsl(var(--muted))'
+      color: 'hsl(218 48% 13% / 0.6)' // Light navy
     },
     {
       name: 'Industry\nAverage', 
       roi: comparison.benchmark.averageROI,
       type: 'benchmark',
-      color: 'hsl(var(--secondary))'
+      color: 'hsl(218 48% 13%)' // Resonance navy
     },
     {
       name: programName.length > 15 ? programName.substring(0, 15) + '...' : programName,
       roi: programROI,
       type: 'program',
       color: programROI >= comparison.benchmark.averageROI 
-        ? 'hsl(var(--primary))' 
-        : 'hsl(var(--destructive))'
+        ? 'hsl(17 100% 60%)' // Resonance orange for good performance
+        : 'hsl(218 48% 13%)' // Resonance navy for below average
     },
     {
       name: 'Industry\nMaximum',
       roi: comparison.benchmark.roiRange.max,
       type: 'benchmark', 
-      color: 'hsl(var(--accent))'
+      color: 'hsl(17 100% 60% / 0.6)' // Light orange
     }
   ];
 

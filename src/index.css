@@ -146,6 +146,32 @@ All colors MUST be HSL. Palette B (Charcoal + Copper) is default.
 
 /* Brand Utility Classes */
 @layer components {
+  /* Resonance Brand Colors */
+  .bg-resonance-navy {
+    background-color: hsl(218 48% 13%);
+  }
+  
+  .text-resonance-navy {
+    color: hsl(218 48% 13%);
+  }
+  
+  .border-resonance-navy {
+    border-color: hsl(218 48% 13%);
+  }
+  
+  .bg-resonance-orange {
+    background-color: hsl(17 100% 60%);
+  }
+  
+  .text-resonance-orange {
+    color: hsl(17 100% 60%);
+  }
+  
+  .border-resonance-orange {
+    border-color: hsl(17 100% 60%);
+  }
+
+  /* Brand Gradients */
   .bg-gradient-resonance {
     background: var(--gradient-resonance);
   }
@@ -160,6 +186,94 @@ All colors MUST be HSL. Palette B (Charcoal + Copper) is default.
   
   .bg-gradient-card {
     background: var(--gradient-card);
+  }
+
+  /* Brand Section Backgrounds */
+  .section-navy {
+    background: linear-gradient(135deg, hsl(218 48% 13% / 0.05) 0%, hsl(218 48% 13% / 0.02) 100%);
+    border-left: 4px solid hsl(218 48% 13%);
+  }
+  
+  .section-orange {
+    background: linear-gradient(135deg, hsl(17 100% 60% / 0.05) 0%, hsl(17 100% 60% / 0.02) 100%);
+    border-left: 4px solid hsl(17 100% 60%);
+  }
+
+  /* Custom Bullet Points */
+  .brand-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  
+  .brand-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .brand-list-navy li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 8px;
+    height: 8px;
+    background: hsl(218 48% 13%);
+    border-radius: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .brand-list-orange li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    width: 0;
+    height: 0;
+    border-left: 5px solid hsl(17 100% 60%);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    transform: translateY(-50%);
+  }
+
+  /* Brand Dividers */
+  .divider-navy {
+    height: 2px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      hsl(218 48% 13% / 0.3) 20%, 
+      hsl(218 48% 13% / 0.8) 50%, 
+      hsl(218 48% 13% / 0.3) 80%, 
+      transparent 100%
+    );
+    margin: 2rem 0;
+    border-radius: 1px;
+  }
+  
+  .divider-orange {
+    height: 2px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      hsl(17 100% 60% / 0.3) 20%, 
+      hsl(17 100% 60% / 0.8) 50%, 
+      hsl(17 100% 60% / 0.3) 80%, 
+      transparent 100%
+    );
+    margin: 2rem 0;
+    border-radius: 1px;
+  }
+  
+  .divider-brand {
+    height: 3px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      hsl(218 48% 13% / 0.4) 15%, 
+      hsl(17 100% 60% / 0.8) 50%, 
+      hsl(218 48% 13% / 0.4) 85%, 
+      transparent 100%
+    );
+    margin: 2.5rem 0;
+    border-radius: 2px;
   }
   
   .shadow-resonance {

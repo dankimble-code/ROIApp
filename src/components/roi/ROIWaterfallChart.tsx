@@ -37,7 +37,7 @@ export function ROIWaterfallChart({
       value: investment,
       cumulative: cumulative,
       type: 'investment',
-      color: 'hsl(var(--destructive))'
+      color: 'hsl(218 48% 13%)' // Resonance navy
     });
 
     // Add each benefit category
@@ -59,7 +59,7 @@ export function ROIWaterfallChart({
         value: value,
         cumulative: cumulative,
         type: 'benefit',
-        color: 'hsl(var(--primary))'
+        color: 'hsl(17 100% 60%)' // Resonance orange
       });
     });
 
@@ -69,7 +69,7 @@ export function ROIWaterfallChart({
       value: roiCalculation.netBenefit,
       cumulative: cumulative,
       type: 'total',
-      color: roiCalculation.netBenefit > 0 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'
+      color: roiCalculation.netBenefit > 0 ? 'hsl(17 100% 60%)' : 'hsl(218 48% 13%)' // Orange for positive, navy for negative
     });
 
     return data;
@@ -188,11 +188,11 @@ export function ROIWaterfallChart({
         {/* Legend */}
         <div className="flex flex-wrap gap-4 mt-4 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-destructive"></div>
+            <div className="w-3 h-3 rounded bg-resonance-navy"></div>
             <span>Investment</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded bg-primary"></div>
+            <div className="w-3 h-3 rounded bg-resonance-orange"></div>
             <span>Benefits</span>
           </div>
           <div className="flex items-center gap-2">

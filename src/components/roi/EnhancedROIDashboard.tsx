@@ -25,6 +25,7 @@ import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PDFExportService } from '@/lib/pdf-export';
 import { BrandedHeader } from './BrandedHeader';
+import { BrandDivider, BrandSection, MetricCard } from '@/components/ui/brand-elements';
 
 interface EnhancedROIDashboardProps {
   program: Program & { organization: { name: string } };
@@ -163,65 +164,33 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary mb-1">
-                  {formatPercentage(roiCalculation.roi)}
-                </div>
-                <div className="text-sm text-muted-foreground">Return on Investment (per year)</div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3 text-muted-foreground mt-1 mx-auto" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Net benefits as percentage of total investment</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+              <MetricCard
+                title="Return on Investment (per year)"
+                value={formatPercentage(roiCalculation.roi)}
+                description="Net benefits as percentage of total investment"
+                variant="navy"
+              />
               
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-1">
-                  {formatCurrency(roiCalculation.npv, true)}
-                </div>
-                <div className="text-sm text-muted-foreground">Net Present Value (per year)</div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3 text-muted-foreground mt-1 mx-auto" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Present value of future cash flows minus investment</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+              <MetricCard
+                title="Net Present Value (per year)"
+                value={formatCurrency(roiCalculation.npv, true)}
+                description="Present value of future cash flows minus investment"
+                variant="orange"
+              />
               
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-1">
-                  {roiCalculation.paybackPeriod}
-                </div>
-                <div className="text-sm text-muted-foreground">Payback (months)</div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3 text-muted-foreground mt-1 mx-auto" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Time to recover initial investment</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+              <MetricCard
+                title="Payback (months)"
+                value={roiCalculation.paybackPeriod.toString()}
+                description="Time to recover initial investment"
+                variant="navy"
+              />
               
-              <div className="text-center">
-                <div className="text-3xl font-bold mb-1">
-                  {(roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1)}x
-                </div>
-                <div className="text-sm text-muted-foreground">Benefit Multiple</div>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info className="h-3 w-3 text-muted-foreground mt-1 mx-auto" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Total benefits divided by total investment</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+              <MetricCard
+                title="Benefit Multiple"
+                value={`${(roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1)}x`}
+                description="Total benefits divided by total investment"
+                variant="orange"
+              />
             </div>
           </CardContent>
         </Card>
@@ -249,17 +218,22 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
-              <ROIChart 
-                roiCalculation={roiCalculation}
-                type="cashflow"
-                title="Annual Cash Flow Analysis"
-              />
-              <ROIChart 
-                roiCalculation={roiCalculation}
-                type="cumulative"
-                title="Cumulative ROI Projection"
-              />
+              <div className="section-navy rounded-lg p-6">
+                <ROIChart 
+                  roiCalculation={roiCalculation}
+                  type="cashflow"
+                  title="Annual Cash Flow Analysis"
+                />
+              </div>
+              <div className="section-orange rounded-lg p-6">
+                <ROIChart 
+                  roiCalculation={roiCalculation}
+                  type="cumulative"
+                  title="Cumulative ROI Projection"
+                />
+              </div>
             </div>
+            <BrandDivider />
             <ROIExplanationPanel 
               roiCalculation={roiCalculation}
               programName={program.name}
@@ -267,11 +241,14 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
           </TabsContent>
 
           <TabsContent value="waterfall" className="space-y-6">
-            <ROIWaterfallChart 
-              roiCalculation={roiCalculation}
-              benefits={benefits}
-              title="ROI Waterfall Analysis"
-            />
+            <BrandSection variant="navy">
+              <ROIWaterfallChart 
+                roiCalculation={roiCalculation}
+                benefits={benefits}
+                title="ROI Waterfall Analysis"
+              />
+            </BrandSection>
+            <BrandDivider />
             <div className="grid md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -326,21 +303,25 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
           </TabsContent>
 
           <TabsContent value="benchmark" className="space-y-6">
-            <BenchmarkComparisonChart 
-              programROI={roiCalculation.roi}
-              programName={program.name}
-              benefits={benefits}
-            />
+            <BrandSection variant="orange">
+              <BenchmarkComparisonChart 
+                programROI={roiCalculation.roi}
+                programName={program.name}
+                benefits={benefits}
+              />
+            </BrandSection>
           </TabsContent>
 
           <TabsContent value="sensitivity" className="space-y-6">
             {scenario && (
-              <SensitivityAnalysisChart 
-                program={program}
-                benefits={benefits}
-                scenario={scenario}
-                baseROI={roiCalculation.roi}
-              />
+              <BrandSection variant="navy">
+                <SensitivityAnalysisChart 
+                  program={program}
+                  benefits={benefits}
+                  scenario={scenario}
+                  baseROI={roiCalculation.roi}
+                />
+              </BrandSection>
             )}
           </TabsContent>
         </Tabs>

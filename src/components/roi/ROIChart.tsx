@@ -14,19 +14,19 @@ export function ROIChart({ roiCalculation, type = 'cashflow', title }: ROIChartP
   const chartConfig = {
     benefits: {
       label: 'Benefits',
-      color: 'hsl(var(--primary))',
+      color: 'hsl(17 100% 60%)', // Resonance orange
     },
     costs: {
       label: 'Costs',
-      color: 'hsl(var(--destructive))',
+      color: 'hsl(218 48% 13%)', // Resonance navy
     },
     netCashFlow: {
       label: 'Net Cash Flow',
-      color: 'hsl(var(--primary))',
+      color: 'hsl(17 100% 60%)', // Resonance orange
     },
     cumulativeCashFlow: {
       label: 'Cumulative Cash Flow',
-      color: 'hsl(var(--chart-2))',
+      color: 'hsl(218 48% 13%)', // Resonance navy
     },
   };
 

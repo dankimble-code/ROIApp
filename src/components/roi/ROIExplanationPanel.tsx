@@ -16,6 +16,7 @@ import {
 import { ROICalculation } from '@/types/coaching';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { useState } from 'react';
+import { BrandDivider, BrandList } from '@/components/ui/brand-elements';
 
 interface ROIExplanationPanelProps {
   roiCalculation: ROICalculation;
@@ -68,14 +69,14 @@ export function ROIExplanationPanel({
       <CardContent className="space-y-6">
         {/* Key Metrics Summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
+          <div className="text-center p-3 section-navy rounded-lg">
+            <div className="text-2xl font-bold text-resonance-navy">
               {formatPercentage(roiCalculation.roi)}
             </div>
             <div className="text-sm text-muted-foreground">ROI</div>
           </div>
-          <div className="text-center p-3 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold">
+          <div className="text-center p-3 section-orange rounded-lg">
+            <div className="text-2xl font-bold text-resonance-orange">
               {formatCurrency(roiCalculation.npv, true)}
             </div>
             <div className="text-sm text-muted-foreground">NPV</div>

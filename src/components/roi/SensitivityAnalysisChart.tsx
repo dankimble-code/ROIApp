@@ -57,15 +57,15 @@ export function SensitivityAnalysisChart({
   const chartConfig = {
     lowROI: {
       label: 'Low Scenario',
-      color: 'hsl(var(--destructive))',
+      color: 'hsl(218 48% 13%)', // Resonance navy
     },
     baseROI: {
       label: 'Base Case',
-      color: 'hsl(var(--muted))',
+      color: 'hsl(218 48% 13% / 0.6)', // Light navy
     },
     highROI: {
       label: 'High Scenario', 
-      color: 'hsl(var(--primary))',
+      color: 'hsl(17 100% 60%)', // Resonance orange
     },
   };
 
@@ -139,8 +139,8 @@ export function SensitivityAnalysisChart({
               />
               
               {/* ROI Range Bars */}
-              <Bar dataKey="lowROI" fill="hsl(var(--destructive))" radius={[2, 0, 0, 2]} />
-              <Bar dataKey="highROI" fill="hsl(var(--primary))" radius={[0, 2, 2, 0]} />
+              <Bar dataKey="lowROI" fill="hsl(218 48% 13%)" radius={[2, 0, 0, 2]} />
+              <Bar dataKey="highROI" fill="hsl(17 100% 60%)" radius={[0, 2, 2, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

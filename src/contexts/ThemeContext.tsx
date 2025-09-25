@@ -10,13 +10,16 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [palette, setPaletteState] = useState<PaletteType>('palette-a')
+  const [palette, setPaletteState] = useState<PaletteType>('palette-a') // Use Resonance brand colors by default
 
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedPalette = localStorage.getItem('theme-palette') as PaletteType
     if (savedPalette && ['palette-a', 'palette-b', 'palette-c'].includes(savedPalette)) {
       setPaletteState(savedPalette)
+    } else {
+      // Set Resonance brand palette as default if no saved preference
+      setPaletteState('palette-a')
     }
   }, [])
 
