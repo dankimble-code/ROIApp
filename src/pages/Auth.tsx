@@ -40,18 +40,18 @@ export default function Auth() {
     await signUp(email, password);
     setIsSubmitting(false);
   };
-  return <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex flex-col">
+  return <div className="min-h-screen hero-gradient resonance-pattern-strong flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         {/* Hero Section */}
-        <div className="text-center lg:text-left space-y-8">
+        <div className="text-center lg:text-left space-y-8 section-gradient p-8 rounded-lg">
           <div className="space-y-4">
             <div className="flex justify-center lg:justify-start mb-4">
               <img src={resonanceLogo} alt="Resonance Executive Coaching" className="h-24 w-auto" />
             </div>
             <div className="space-y-3">
               
-              <h2 className="text-2xl font-semibold text-foreground">
+              <h2 className="text-2xl font-semibold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
                 ROI Dashboard & Analytics Platform
               </h2>
               <p className="text-lg text-muted-foreground font-medium italic">
@@ -64,7 +64,7 @@ export default function Auth() {
             </div>
             
             {/* Professional Credentials Badge */}
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 space-y-2">
+            <div className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-lg p-4 space-y-2">
               <p className="text-sm font-semibold text-primary">Professional Excellence</p>
               <p className="text-xs text-muted-foreground">
                 ICF Certified • 15+ Years Experience • Fortune 500 Portfolio • Evidence-Based Methodology
@@ -73,28 +73,28 @@ export default function Auth() {
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-3 p-4 bg-card rounded-lg border">
+            <div className="card-watermark flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-primary/10 shadow-resonance">
               <Calculator className="h-8 w-8 text-primary" />
               <div>
                 <h3 className="font-semibold">ROI Analysis</h3>
                 <p className="text-sm text-muted-foreground">Calculate payback, NPV</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 p-4 bg-card rounded-lg border">
-              <TrendingUp className="h-8 w-8 text-primary" />
+            <div className="card-watermark flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-accent/10 shadow-resonance">
+              <TrendingUp className="h-8 w-8 text-accent" />
               <div>
                 <h3 className="font-semibold">Sensitivity Analysis</h3>
                 <p className="text-sm text-muted-foreground">Tornado charts</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 p-4 bg-card rounded-lg border">
-              <Users className="h-8 w-8 text-primary" />
+            <div className="card-watermark flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-secondary/10 shadow-resonance">
+              <Users className="h-8 w-8 text-secondary" />
               <div>
                 <h3 className="font-semibold">Benchmarking</h3>
                 <p className="text-sm text-muted-foreground">Industry standards</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 p-4 bg-card rounded-lg border">
+            <div className="card-watermark flex items-center space-x-3 p-4 bg-gradient-card rounded-lg border border-primary/10 shadow-resonance">
               <Target className="h-8 w-8 text-primary" />
               <div>
                 <h3 className="font-semibold">Scenarios</h3>
@@ -104,8 +104,10 @@ export default function Auth() {
           </div>
         </div>
 
+        <div className="gradient-divider lg:hidden"></div>
+
         {/* Auth Form */}
-        <Card className="w-full max-w-md mx-auto shadow-xl border-primary/20">
+        <Card className="card-watermark w-full max-w-md mx-auto bg-gradient-card border-primary/20 shadow-elevated">
           <CardHeader className="text-center space-y-4">
             <div>
               <CardTitle className="text-2xl">Welcome to Resonance</CardTitle>
@@ -159,7 +161,8 @@ export default function Auth() {
       </div>
       
       {/* Footer */}
-      <div className="bg-primary/5 border-t border-primary/10 py-4 mt-auto">
+      <div className="gradient-divider-thick"></div>
+      <div className="section-gradient bg-primary/5 border-t border-primary/10 py-4 mt-auto">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-sm text-muted-foreground">
             © 2024 Resonance Executive Coaching • Professional Leadership Development • 

@@ -144,10 +144,10 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
         {programs.map((program) => (
           <Card 
             key={program.id}
-            className={`transition-colors cursor-pointer ${
+            className={`card-watermark transition-all duration-300 cursor-pointer border shadow-resonance hover:shadow-elevated ${
               selectedPrograms.includes(program.id) 
-                ? 'border-primary bg-primary/5' 
-                : ''
+                ? 'border-primary bg-gradient-to-r from-primary/5 to-accent/5 shadow-glow' 
+                : 'border-border/50 bg-gradient-card hover:border-primary/30'
             }`}
             onClick={() => toggleProgramSelection(program.id)}
           >

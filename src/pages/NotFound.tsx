@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Home, Search, ArrowLeft } from "lucide-react";
-import resonanceLogo from "@/assets/resonance-logo.png";
+
+const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
 
 const NotFound = () => {
   const location = useLocation();

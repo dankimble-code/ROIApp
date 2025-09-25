@@ -194,9 +194,101 @@ All colors MUST be HSL. Palette B (Charcoal + Copper) is default.
     z-index: 0;
   }
   
+  .card-watermark {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .card-watermark::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background-image: url('/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .chart-watermark {
+    position: relative;
+  }
+  
+  .chart-watermark::before {
+    content: '';
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    background-image: url('/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.06;
+    pointer-events: none;
+    z-index: 10;
+  }
+  
   .resonance-pattern {
     background-image: 
       radial-gradient(circle at 25% 25%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, hsl(var(--accent) / 0.03) 0%, transparent 50%);
+      radial-gradient(circle at 75% 75%, hsl(var(--accent) / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, hsl(var(--secondary) / 0.02) 0%, transparent 70%);
+  }
+  
+  .resonance-pattern-strong {
+    background-image: 
+      radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.08) 0%, transparent 60%),
+      radial-gradient(circle at 80% 80%, hsl(var(--accent) / 0.06) 0%, transparent 60%),
+      radial-gradient(circle at 60% 40%, hsl(var(--secondary) / 0.04) 0%, transparent 80%);
+  }
+  
+  .gradient-divider {
+    height: 2px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      hsl(var(--primary) / 0.3) 20%, 
+      hsl(var(--accent) / 0.5) 50%, 
+      hsl(var(--secondary) / 0.3) 80%, 
+      transparent 100%
+    );
+    margin: 2rem 0;
+  }
+  
+  .gradient-divider-thick {
+    height: 4px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      hsl(var(--primary) / 0.4) 15%, 
+      hsl(var(--accent) / 0.6) 50%, 
+      hsl(var(--secondary) / 0.4) 85%, 
+      transparent 100%
+    );
+    margin: 3rem 0;
+    border-radius: 2px;
+  }
+  
+  .hero-gradient {
+    background: linear-gradient(135deg, 
+      hsl(var(--background)) 0%,
+      hsl(var(--primary) / 0.05) 25%,
+      hsl(var(--accent) / 0.08) 50%,
+      hsl(var(--secondary) / 0.03) 75%,
+      hsl(var(--background)) 100%
+    );
+  }
+  
+  .section-gradient {
+    background: linear-gradient(180deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.02) 50%,
+      transparent 100%
+    );
   }
 }

@@ -133,7 +133,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
     <TooltipProvider>
       <div className="space-y-8 brand-watermark resonance-pattern">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-gradient-card rounded-lg p-6 shadow-resonance">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between hero-gradient rounded-lg p-6 shadow-resonance border border-primary/10">
           <div>
             <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               ROI Dashboard
@@ -164,7 +164,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
 
         {/* Quick Stats */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
+          <Card className="card-watermark bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance border border-primary/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Programs</CardTitle>
               <Target className="h-4 w-4 text-primary" />
@@ -177,7 +177,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
+          <Card className="card-watermark bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance border border-accent/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average ROI</CardTitle>
               <TrendingUp className="h-4 w-4 text-accent" />
@@ -195,7 +195,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
+          <Card className="card-watermark bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance border border-secondary/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Investment</CardTitle>
               <DollarSign className="h-4 w-4 text-secondary" />
@@ -208,7 +208,7 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance">
+          <Card className="card-watermark bg-gradient-card shadow-resonance hover:shadow-elevated transition-resonance border border-primary/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Participants</CardTitle>
               <Users className="h-4 w-4 text-primary" />
@@ -246,24 +246,31 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
 
         {/* ROI Analysis Charts */}
         {programsWithROI.length > 0 && (
-          <div className="grid gap-6 lg:grid-cols-2">
-            <ROIChart 
-              roiCalculation={programsWithROI[0].roiCalculation!}
-              type="cashflow"
-              title="Cash Flow Analysis - Featured Program"
-            />
-            <ROIChart 
-              roiCalculation={programsWithROI[0].roiCalculation!}
-              type="cumulative"
-              title="Cumulative ROI Projection"
-            />
-          </div>
+          <>
+            <div className="gradient-divider"></div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="chart-watermark">
+                <ROIChart 
+                  roiCalculation={programsWithROI[0].roiCalculation!}
+                  type="cashflow"
+                  title="Cash Flow Analysis - Featured Program"
+                />
+              </div>
+              <div className="chart-watermark">
+                <ROIChart 
+                  roiCalculation={programsWithROI[0].roiCalculation!}
+                  type="cumulative"
+                  title="Cumulative ROI Projection"
+                />
+              </div>
+            </div>
+          </>
         )}
 
-        <Separator />
+        <div className="gradient-divider-thick"></div>
 
         {/* Main Content Tabs */}
-        <div className="bg-gradient-card rounded-lg p-6 shadow-resonance">
+        <div className="section-gradient bg-gradient-card rounded-lg p-6 shadow-resonance border border-primary/5">
           <Tabs defaultValue="programs" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3 bg-primary/10">
               <TabsTrigger value="programs" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
