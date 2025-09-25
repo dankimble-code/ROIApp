@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Organization, Program } from '@/types/coaching';
-import { useBenefits } from '@/hooks/useBenefits';
+import { Organization, Program, Benefit } from '@/types/coaching';
+import { useBenefits, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
+import { BenefitForm } from '@/components/benefits/BenefitForm';
 import { EnhancedROIDashboard } from '@/components/roi/EnhancedROIDashboard';
 import { BrandSection, MetricCard } from '@/components/ui/brand-elements';
-import { TrendingUp, Users, Target, DollarSign } from 'lucide-react';
+import { TrendingUp, Users, Target, DollarSign, Edit, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface PrefilledBenefitsStepProps {
@@ -28,7 +30,11 @@ export function PrefilledBenefitsStep({
   program 
 }: PrefilledBenefitsStepProps) {
   const navigate = useNavigate();
+  const [editingBenefit, setEditingBenefit] = useState<Benefit | null>(null);
+  
   const { data: benefits = [], isLoading } = useBenefits(programId);
+  const updateBenefit = useUpdateBenefit();
+  const deleteBenefit = useDeleteBenefit();
 
   // Calculate totals
   const totalAnnualValue = benefits.reduce((sum, benefit) => 
@@ -38,6 +44,34 @@ export function PrefilledBenefitsStep({
   const totalExpectedImpact = benefits.reduce((sum, benefit) => 
     sum + (benefit.annual_value * participantCount * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100)), 0
   );
+
+  const handleUpdateBenefit = (benefitData: Omit<Benefit, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!editingBenefit) return;
+    
+    updateBenefit.mutate(
+      {
+        id: editingBenefit.id,
+        data: {
+          category: benefitData.category,
+          description: benefitData.description,
+          annual_value: benefitData.annual_value,
+          attribution_percentage: benefitData.attribution_percentage,
+          confidence_level: benefitData.confidence_level,
+        },
+      },
+      {
+        onSuccess: () => {
+          setEditingBenefit(null);
+        },
+      }
+    );
+  };
+
+  const handleDeleteBenefit = (benefitId: string) => {
+    if (window.confirm('Are you sure you want to delete this benefit?')) {
+      deleteBenefit.mutate(benefitId);
+    }
+  };
 
   const handleCalculateTotal = () => {
     if (programId) {
@@ -75,6 +109,19 @@ export function PrefilledBenefitsStep({
       updated_at: new Date().toISOString(),
     }
   };
+
+  // Show edit form if editing a benefit
+  if (editingBenefit) {
+    return (
+      <BenefitForm
+        benefit={editingBenefit}
+        onSubmit={handleUpdateBenefit}
+        onCancel={() => setEditingBenefit(null)}
+        isEditing={true}
+        participantCount={participantCount}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -124,6 +171,28 @@ export function PrefilledBenefitsStep({
                       <p className="text-sm text-muted-foreground">
                         {benefit.description}
                       </p>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingBenefit(benefit)}
+                          className="border-resonance-orange text-resonance-orange hover:bg-resonance-orange hover:text-white"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteBenefit(benefit.id)}
+                          className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                     <div className="text-right space-y-1">
                       <div className="space-y-1">
