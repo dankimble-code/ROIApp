@@ -40,13 +40,19 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex justify-between items-center min-h-20 py-3">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <img 
-                  src="/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png" 
-                  alt="Resonance Executive Coaching" 
-                  className="h-16 w-auto"
-                />
+                <a 
+                  href="https://resonanceexecutivecoaching.com/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                >
+                  <img 
+                    src="/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png" 
+                    alt="Resonance Executive Coaching" 
+                    className="h-16 w-auto"
+                  />
+                </a>
                 <div className="hidden sm:block">
-                  <h1 className="text-xl font-bold text-primary">Resonance Executive Coaching</h1>
                   <p className="text-sm text-muted-foreground">Executive Leadership Development</p>
                   <p className="text-xs text-muted-foreground/80 italic">by Daniel Kimble</p>
                 </div>
