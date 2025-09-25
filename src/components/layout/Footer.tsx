@@ -101,7 +101,7 @@ export function Footer() {
             </p>
             <div className="flex space-x-6 text-xs text-primary-foreground/60">
               <a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a>
-              <span>Terms of Service</span>
+              <a href="/terms-of-service" className="hover:text-accent transition-colors">Terms of Service</a>
               <span>Professional Standards</span>
             </div>
           </div>

@@ -15,6 +15,7 @@ import Styleguide from "./pages/Styleguide";
 import EmailConfirmed from "./pages/EmailConfirmed";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,7 @@ const App = () => {
                 <Route path="/calculation" element={<Calculation />} />
                 <Route path="/styleguide" element={<Styleguide />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/email-confirmed" element={<EmailConfirmed />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
