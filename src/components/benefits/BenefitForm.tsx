@@ -47,7 +47,7 @@ export function BenefitForm({
   const [confidence, setConfidence] = useState([benefit?.confidence_level || 80]);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
-  // Filter out used categories unless editing the current benefit or it's "Other" (up to 5 allowed)
+  // Filter out used categories unless editing the current benefit or it's "Other" (up to 3 allowed)
   // Note: For existing "Other" benefits, we check against their custom names, not "Other"
   const otherBenefitsCount = existingBenefits.filter(b => 
     !BENEFIT_CATEGORIES.includes(b.category as BenefitCategory) && 
@@ -55,7 +55,7 @@ export function BenefitForm({
   ).length;
   const availableCategories = BENEFIT_CATEGORIES.filter(cat => {
     if (cat === 'Other') {
-      return otherBenefitsCount < 5; // Allow up to 5 "Other" benefits
+      return otherBenefitsCount < 3; // Allow up to 3 "Other" benefits
     }
     return !usedCategories.includes(cat) || (isEditing && cat === benefit?.category);
   });
@@ -180,7 +180,7 @@ export function BenefitForm({
               <Label htmlFor="category">Benefit Category</Label>
               {category === 'Other' && otherBenefitsCount > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  {otherBenefitsCount}/5 "Other" benefits used. Each must have a unique description.
+                  {otherBenefitsCount}/3 "Other" benefits used. Each must have a unique description.
                 </p>
               )}
               <div className="flex gap-2">

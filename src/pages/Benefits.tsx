@@ -56,6 +56,14 @@ export default function Benefits() {
     .map(benefit => benefit.category)
     .filter(cat => BENEFIT_CATEGORIES.includes(cat as BenefitCategory) && cat !== 'Other') as BenefitCategory[];
 
+  // Count "Other" benefits (custom benefits not in predefined categories)
+  const otherBenefitsCount = benefits.filter(b => 
+    !BENEFIT_CATEGORIES.includes(b.category as BenefitCategory)
+  ).length;
+
+  // Maximum: 7 predefined categories + 3 "Other" benefits = 10 total
+  const maxBenefitsReached = benefits.length >= 10 || otherBenefitsCount >= 3;
+
   // Create or get existing program
   useEffect(() => {
     const initializeProgram = async () => {
@@ -243,13 +251,34 @@ export default function Benefits() {
                 <TrendingUp className="h-5 w-5" />
                 Expected Benefits & Outcomes
               </CardTitle>
-            <Button 
-              onClick={() => setShowForm(true)} 
-              disabled={benefits.length >= 13} // 8 unique categories + 5 "Other" benefits max
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Benefit
-            </Button>
+              <div className="flex items-center gap-2">
+                {maxBenefitsReached && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Info className="h-4 w-4" />
+                        <span className="text-xs">Maximum benefits added</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-sm">
+                      <p className="font-medium mb-1">Maximum Allowed Benefits Reached</p>
+                      <p className="text-xs">You can add up to:</p>
+                      <ul className="text-xs list-disc list-inside mt-1">
+                        <li>7 predefined benefit categories</li>
+                        <li>3 custom "Other" benefits</li>
+                      </ul>
+                      <p className="text-xs mt-1">Total maximum: 10 benefits</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+                <Button 
+                  onClick={() => setShowForm(true)} 
+                  disabled={maxBenefitsReached}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Benefit
+                </Button>
+              </div>
             </div>
           </CardHeader>
         <CardContent className="space-y-6">
@@ -300,13 +329,12 @@ export default function Benefits() {
                 <p className="text-muted-foreground mb-4">
                   Add benefits to calculate ROI projections for your coaching program.
                 </p>
-              <Button 
-                onClick={() => setShowForm(true)} 
-                disabled={benefits.length >= 13} // 8 unique categories + 5 "Other" benefits max
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Your First Benefit
-              </Button>
+                <Button 
+                  onClick={() => setShowForm(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Benefit
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
