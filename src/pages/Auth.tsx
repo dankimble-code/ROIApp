@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
 import { BrandedLoader } from '@/components/ui/branded-loader';
+import { Footer } from '@/components/layout/Footer';
 // Using the correct logo from uploads
 const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
 export default function Auth() {
@@ -161,14 +162,6 @@ export default function Auth() {
       </div>
       
       {/* Footer */}
-      <div className="gradient-divider-thick"></div>
-      <div className="section-gradient bg-primary/5 border-t border-primary/10 py-4 mt-auto">
-        <div className="max-w-6xl mx-auto px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2024 Resonance Executive Coaching • Professional Leadership Development • 
-            <span className="font-medium">Daniel Kimble, ICF Certified Executive Coach</span>
-          </p>
-        </div>
-      </div>
+      <Footer />
     </div>;
 }
