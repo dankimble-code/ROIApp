@@ -203,20 +203,6 @@ export default function Benefits() {
     sum + ((benefit.annual_value || 0) * participantCount * ((benefit.attribution_percentage || 0) / 100) * ((benefit.confidence_level || 0) / 100)), 0
   );
 
-  if (showForm) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <BenefitForm
-          onSubmit={handleCreateBenefit}
-          onCancel={() => setShowForm(false)}
-          participantCount={participantCount}
-          usedCategories={usedCategories}
-          existingBenefits={benefits}
-        />
-      </div>
-    );
-  }
-
   if (editingBenefit) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -292,6 +278,19 @@ export default function Benefits() {
           )}
 
             <Separator />
+
+            {/* Add Benefit Form */}
+            {showForm && (
+              <div className="mb-6">
+                <BenefitForm
+                  onSubmit={handleCreateBenefit}
+                  onCancel={() => setShowForm(false)}
+                  participantCount={participantCount}
+                  usedCategories={usedCategories}
+                  existingBenefits={benefits}
+                />
+              </div>
+            )}
 
             {/* Benefits List */}
             {benefits.length === 0 ? (
