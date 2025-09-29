@@ -74,8 +74,7 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="font-semibold text-base">Professional Excellence</h4>
             <div className="space-y-2 text-sm text-primary-foreground/80">
-              <p>• International Coach Federation (ICF) Certified</p>
-              <p>• 15+ Years Executive Leadership Experience</p>
+              <p>• Silicon Valley 35+ year veteran coach</p>
               <p>• Evidence-Based Coaching Methodologies</p>
               <p>• ROI-Focused Development Programs</p>
               <p>• Fortune 500 Client Portfolio</p>
