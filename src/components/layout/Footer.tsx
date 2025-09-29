@@ -75,6 +75,7 @@ export function Footer() {
             <h4 className="font-semibold text-base">Professional Excellence</h4>
             <div className="space-y-2 text-sm text-primary-foreground/80">
               <p>• Silicon Valley 35+ year veteran coach</p>
+              <p>• UC Berkeley Executive Coaching Institute Certified</p>
               <p>• Evidence-Based Coaching Methodologies</p>
               <p>• ROI-Focused Development Programs</p>
               <p>• Fortune 500 Client Portfolio</p>
