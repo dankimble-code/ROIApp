@@ -5,13 +5,15 @@ import { ArrowLeft, Users, Calendar, DollarSign } from 'lucide-react';
 import { Program } from '@/types/coaching';
 import { formatCurrency } from '@/lib/utils';
 import { EnhancedROIDashboard } from '@/components/roi/EnhancedROIDashboard';
-
+import { useBenefits } from '@/hooks/useBenefits';
 interface ProgramDetailViewProps {
   program: Program & { organization: { name: string } };
   onBack: () => void;
 }
 
 export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
+  const { data: benefits = [], isLoading: isBenefitsLoading } = useBenefits(program.id);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -74,6 +76,39 @@ export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
             <Badge variant="secondary">Active</Badge>
             <Badge variant="outline">Executive Coaching</Badge>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Benefits List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Benefits</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isBenefitsLoading ? (
+            <div className="text-sm text-muted-foreground">Loading benefits…</div>
+          ) : benefits.length > 0 ? (
+            <div className="grid gap-3">
+              {benefits.map((b) => (
+                <div key={b.id} className="flex items-start justify-between p-3 rounded-md border">
+                  <div className="space-y-1">
+                    <div className="font-medium">{b.category}</div>
+                    <div className="text-sm text-muted-foreground">{b.description}</div>
+                    <div className="flex gap-2 pt-1">
+                      <Badge variant="outline">{b.attribution_percentage}% attribution</Badge>
+                      <Badge variant="outline">{b.confidence_level}% confidence</Badge>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">Per Participant</div>
+                    <div className="font-semibold">{formatCurrency(b.annual_value)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">No benefits found for this program.</div>
+          )}
         </CardContent>
       </Card>
 

@@ -35,7 +35,18 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
   const navigate = useNavigate();
   const { data: benefits = [] } = useBenefits(program.id);
   const { data: scenario } = useBaselineScenario(program.id);
-  const roiCalculation = useROICalculation(program, benefits, scenario);
+  // Fallback to a default baseline scenario if none exists so details still render
+  const effectiveScenario = scenario || {
+    id: 'baseline-auto',
+    program_id: program.id,
+    name: 'Baseline',
+    description: 'Auto-generated baseline for ROI calculations',
+    discount_rate: 0.08,
+    is_baseline: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  } as any;
+  const roiCalculation = useROICalculation(program, benefits, effectiveScenario);
 
   const handleAddBenefits = () => {
     navigate('/benefits', {
