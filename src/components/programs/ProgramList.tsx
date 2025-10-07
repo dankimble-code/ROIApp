@@ -149,7 +149,7 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
                 ? 'border-primary bg-gradient-to-r from-primary/5 to-accent/5 shadow-glow' 
                 : 'border-border/50 bg-gradient-card hover:border-primary/30'
             }`}
-            onClick={() => toggleProgramSelection(program.id)}
+            onClick={() => handleViewDetails(program.id)}
           >
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -187,6 +187,13 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
                       }}>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        toggleProgramSelection(program.id);
+                      }}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {selectedPrograms.includes(program.id) ? 'Remove from Comparison' : 'Select for Comparison'}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
