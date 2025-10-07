@@ -19,7 +19,7 @@ export function usePrograms() {
         .from('programs')
         .select(`
           *,
-          organization:organizations(*)
+          organizations!inner(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -28,7 +28,13 @@ export function usePrograms() {
         throw new Error(error.message);
       }
 
-      return data as ProgramWithOrganization[];
+      // Transform the data to match our expected structure
+      const programs = data?.map((item: any) => ({
+        ...item,
+        organization: item.organizations
+      })) || [];
+
+      return programs as ProgramWithOrganization[];
     },
   });
 }
@@ -42,17 +48,27 @@ export function useProgram(id: string) {
         .from('programs')
         .select(`
           *,
-          organization:organizations(*)
+          organizations!inner(*)
         `)
         .eq('id', id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching program:', error);
         throw new Error(error.message);
       }
 
-      return data as ProgramWithOrganization;
+      if (!data) {
+        throw new Error('Program not found');
+      }
+
+      // Transform the data to match our expected structure
+      const program = {
+        ...data,
+        organization: data.organizations
+      };
+
+      return program as ProgramWithOrganization;
     },
     enabled: !!id,
   });
