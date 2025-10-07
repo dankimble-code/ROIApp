@@ -139,67 +139,69 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
         setCreatedProgramId(programData.id);
       }
 
-      // Create default benefits
-      const defaultBenefits = [
-        {
-          program_id: programData.id,
-          category: 'Customer Satisfaction',
-          description: 'Improved customer relationships and satisfaction scores per participant',
-          annual_value: 10000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-        {
-          program_id: programData.id,
-          category: 'Innovation',
-          description: 'Increased innovation and creative problem-solving per participant',
-          annual_value: 10000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-        {
-          program_id: programData.id,
-          category: 'Decision Making',
-          description: 'Better decision-making per participant leading to cost savings and opportunities',
-          annual_value: 10000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-        {
-          program_id: programData.id,
-          category: 'Retention Improvement',
-          description: 'Reduced turnover costs per participant through improved employee satisfaction',
-          annual_value: 15000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-        {
-          program_id: programData.id,
-          category: 'Team Effectiveness',
-          description: 'Improved collaboration and team dynamics per participant',
-          annual_value: 10000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-        {
-          program_id: programData.id,
-          category: 'Performance Enhancement',
-          description: 'Improved individual performance metrics per participant',
-          annual_value: 10000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-        {
-          program_id: programData.id,
-          category: 'Productivity Gains',
-          description: 'Increased productivity from improved focus and time management skills per participant',
-          annual_value: 10000,
-          attribution_percentage: 50,
-          confidence_level: 80,
-        },
-      ];
+      // Only create default benefits for new programs, not when editing
+      if (!isEditing) {
+        const defaultBenefits = [
+          {
+            program_id: programData.id,
+            category: 'Customer Satisfaction',
+            description: 'Improved customer relationships and satisfaction scores per participant',
+            annual_value: 10000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+          {
+            program_id: programData.id,
+            category: 'Innovation',
+            description: 'Increased innovation and creative problem-solving per participant',
+            annual_value: 10000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+          {
+            program_id: programData.id,
+            category: 'Decision Making',
+            description: 'Better decision-making per participant leading to cost savings and opportunities',
+            annual_value: 10000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+          {
+            program_id: programData.id,
+            category: 'Retention Improvement',
+            description: 'Reduced turnover costs per participant through improved employee satisfaction',
+            annual_value: 15000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+          {
+            program_id: programData.id,
+            category: 'Team Effectiveness',
+            description: 'Improved collaboration and team dynamics per participant',
+            annual_value: 10000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+          {
+            program_id: programData.id,
+            category: 'Performance Enhancement',
+            description: 'Improved individual performance metrics per participant',
+            annual_value: 10000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+          {
+            program_id: programData.id,
+            category: 'Productivity Gains',
+            description: 'Increased productivity from improved focus and time management skills per participant',
+            annual_value: 10000,
+            attribution_percentage: 50,
+            confidence_level: 80,
+          },
+        ];
 
-      await bulkCreateBenefits.mutateAsync(defaultBenefits);
+        await bulkCreateBenefits.mutateAsync(defaultBenefits);
+      }
       
       // Navigate directly to the calculation page with the program
       setCurrentStep(currentStep + 1);
