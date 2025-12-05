@@ -75,7 +75,14 @@ export function PrefilledBenefitsStep({
 
   const handleCalculateTotal = () => {
     if (programId) {
-      navigate(`/calculation/${programId}`);
+      navigate(`/calculation/${programId}`, {
+        state: {
+          organization,
+          program,
+          benefits,
+          programId
+        }
+      });
     }
   };
 
