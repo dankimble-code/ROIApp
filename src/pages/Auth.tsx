@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
 import { BrandedLoader } from '@/components/ui/branded-loader';
 import { Footer } from '@/components/layout/Footer';
-// Using the correct logo from uploads
-const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
+// Using the standard logo
+const resonanceLogo = '/resonance-logo.png';
 export default function Auth() {
   const {
     user,
