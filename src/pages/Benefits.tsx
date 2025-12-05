@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { BenefitForm } from '@/components/benefits/BenefitForm';
+import { BenefitDefaultsSettings } from '@/components/benefits/BenefitDefaultsSettings';
 import { Plus, Edit, Trash2, Info, TrendingUp, ArrowLeft, Calculator, Save } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Benefit, BenefitCategory, BENEFIT_CATEGORIES } from '@/types/coaching';
@@ -238,10 +239,13 @@ export default function Benefits() {
               Define the expected benefits and outcomes for {program.name || 'your coaching program'}
             </p>
           </div>
-          <Button variant="outline" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Wizard
-          </Button>
+          <div className="flex items-center gap-2">
+            <BenefitDefaultsSettings />
+            <Button variant="outline" onClick={handleBack}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Wizard
+            </Button>
+          </div>
         </div>
 
         <Card>

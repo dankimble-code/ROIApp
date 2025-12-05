@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { BENEFIT_CATEGORIES, BenefitCategory, Benefit } from '@/types/coaching';
 import { Info, Plus, X } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
+import { useBenefitDefaults } from '@/hooks/useBenefitDefaults';
 
 interface BenefitFormProps {
   benefit?: Partial<Benefit>;
@@ -31,6 +32,8 @@ export function BenefitForm({
   usedCategories = [],
   existingBenefits = []
 }: BenefitFormProps) {
+  const { getTemplate } = useBenefitDefaults();
+  
   const [category, setCategory] = useState<BenefitCategory>(
     (benefit && benefit.category && !BENEFIT_CATEGORIES.includes(benefit.category as BenefitCategory)) 
       ? 'Other' 
@@ -109,54 +112,8 @@ export function BenefitForm({
     });
   };
 
-  const getBenefitTemplate = (category: BenefitCategory) => {
-    const templates = {
-      'Productivity Gains': {
-        description: 'Increased productivity from improved focus and time management skills per participant',
-        value: 10000,
-        attribution: 50,
-      },
-      'Retention Improvement': {
-        description: 'Reduced turnover costs per participant through improved employee satisfaction',
-        value: 15000,
-        attribution: 50,
-      },
-      'Performance Enhancement': {
-        description: 'Improved individual performance metrics per participant',
-        value: 10000,
-        attribution: 50,
-      },
-      'Decision Making': {
-        description: 'Better decision-making per participant leading to cost savings and opportunities',
-        value: 10000,
-        attribution: 50,
-      },
-      'Team Effectiveness': {
-        description: 'Improved collaboration and team dynamics per participant',
-        value: 10000,
-        attribution: 50,
-      },
-      'Innovation': {
-        description: 'Increased innovation and creative problem-solving per participant',
-        value: 10000,
-        attribution: 50,
-      },
-      'Customer Satisfaction': {
-        description: 'Improved customer relationships and satisfaction scores per participant',
-        value: 10000,
-        attribution: 50,
-      },
-      'Other': {
-        description: 'Custom benefit specific to your organization per participant',
-        value: 10000,
-        attribution: 50,
-      },
-    };
-    return templates[category];
-  };
-
   const applyTemplate = () => {
-    const template = getBenefitTemplate(category);
+    const template = getTemplate(category);
     setDescription(template.description);
     setAnnualValue(template.value.toString());
     setAttribution([template.attribution]);
