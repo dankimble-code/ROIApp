@@ -89,9 +89,77 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
   const handleExportPDF = async () => {
     try {
       const { PDFExportService } = await import('@/lib/pdf-export');
+      const { supabase } = await import('@/integrations/supabase/client');
       const pdfService = new PDFExportService();
       
-      // Create dashboard data from current component state
+      // Fetch all benefits for all programs
+      const programIds = programs.map(p => p.id);
+      const { data: allBenefits } = await supabase
+        .from('benefits')
+        .select('*')
+        .in('program_id', programIds);
+      
+      // Group benefits by program
+      const benefitsByProgram: Record<string, any[]> = {};
+      (allBenefits || []).forEach(benefit => {
+        if (!benefitsByProgram[benefit.program_id]) {
+          benefitsByProgram[benefit.program_id] = [];
+        }
+        benefitsByProgram[benefit.program_id].push(benefit);
+      });
+
+      // Calculate ROI for each program
+      const roiCalculations: Record<string, any> = {};
+      let totalROI = 0;
+      let programsWithROICount = 0;
+
+      programs.forEach(program => {
+        const programBenefits = benefitsByProgram[program.id] || [];
+        if (programBenefits.length === 0) return;
+
+        const totalInvestment = (program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0);
+        const annualBenefits = programBenefits.reduce((sum, b) => 
+          sum + (b.annual_value * b.attribution_percentage / 100), 0);
+        const totalBenefits = annualBenefits * program.duration_months / 12 * 3; // 3-year projection
+        const netBenefit = totalBenefits - totalInvestment;
+        const roi = totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : 0;
+        const paybackPeriod = annualBenefits > 0 ? totalInvestment / annualBenefits : 0;
+        
+        // Calculate NPV with 8% discount rate
+        const discountRate = 0.08;
+        let npv = -totalInvestment;
+        const yearlyBreakdown = [];
+        let cumulative = -totalInvestment;
+        
+        for (let year = 1; year <= 5; year++) {
+          const yearBenefits = annualBenefits;
+          const yearCosts = year === 1 ? totalInvestment : 0;
+          cumulative += yearBenefits - yearCosts;
+          npv += yearBenefits / Math.pow(1 + discountRate, year);
+          yearlyBreakdown.push({
+            year,
+            benefits: Math.round(yearBenefits),
+            costs: Math.round(yearCosts),
+            cumulative: Math.round(cumulative)
+          });
+        }
+
+        roiCalculations[program.id] = {
+          roi: Math.round(roi * 10) / 10,
+          npv: Math.round(npv),
+          paybackPeriod: Math.round(paybackPeriod * 10) / 10,
+          totalInvestment: Math.round(totalInvestment),
+          totalBenefits: Math.round(totalBenefits),
+          netBenefit: Math.round(netBenefit),
+          yearlyBreakdown
+        };
+
+        totalROI += roi;
+        programsWithROICount++;
+      });
+
+      const calculatedAverageROI = programsWithROICount > 0 ? totalROI / programsWithROICount : averageROI;
+
       const dashboardData = {
         programs: programs.map(p => ({ 
           ...p, 
@@ -100,13 +168,16 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             user_id: 'temp-user-id',
             name: p.organization?.name || 'Unknown Organization',
             industry: p.organization?.industry || 'Not specified',
+            employee_count: p.organization?.employee_count || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           } 
         })),
+        benefits: benefitsByProgram,
+        roiCalculations,
         stats: {
           activePrograms: totalPrograms,
-          averageROI: averageROI,
+          averageROI: calculatedAverageROI,
           totalInvestment: totalInvestment,
           totalParticipants: totalParticipants
         }

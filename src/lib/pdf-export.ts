@@ -11,8 +11,25 @@ export interface PDFExportOptions {
   author?: string;
 }
 
+export interface ProgramROIData {
+  roi: number;
+  npv: number;
+  paybackPeriod: number;
+  totalInvestment: number;
+  totalBenefits: number;
+  netBenefit: number;
+  yearlyBreakdown?: Array<{
+    year: number;
+    benefits: number;
+    costs: number;
+    cumulative: number;
+  }>;
+}
+
 export interface DashboardData {
   programs: (Program & { organization: Organization })[];
+  benefits: Record<string, Benefit[]>;
+  roiCalculations: Record<string, ProgramROIData>;
   stats: {
     activePrograms: number;
     averageROI: number;
@@ -253,20 +270,142 @@ export class PDFExportService {
         this.addText(`The average ROI across all programs is ${data.stats.averageROI.toFixed(1)}%.`);
       }
 
-      // Program Overview
+      // Portfolio ROI Summary Table
+      const programsWithROI = data.programs.filter(p => data.roiCalculations[p.id]);
+      if (programsWithROI.length > 0) {
+        this.addSection('Portfolio ROI Summary');
+        
+        const roiHeaders = ['Program', 'ROI', 'NPV', 'Net Benefit', 'Payback'];
+        const roiRows = programsWithROI.map(program => {
+          const calc = data.roiCalculations[program.id];
+          return [
+            program.name.length > 20 ? program.name.substring(0, 18) + '...' : program.name,
+            `${calc.roi.toFixed(1)}%`,
+            `$${calc.npv.toLocaleString()}`,
+            `$${calc.netBenefit.toLocaleString()}`,
+            `${calc.paybackPeriod.toFixed(1)} yrs`
+          ];
+        });
+        
+        this.addTable(roiHeaders, roiRows);
+      }
+
+      // Program Overview Table
       if (data.programs.length > 0) {
         this.addSection('Program Overview');
         
         const headers = ['Program Name', 'Organization', 'Participants', 'Duration', 'Investment'];
         const rows = data.programs.map(program => [
-          program.name,
-          program.organization?.name || 'N/A',
+          program.name.length > 15 ? program.name.substring(0, 13) + '...' : program.name,
+          (program.organization?.name || 'N/A').length > 12 ? (program.organization?.name || 'N/A').substring(0, 10) + '...' : (program.organization?.name || 'N/A'),
           program.participants_count.toString(),
-          `${program.duration_months} months`,
-          `$${((program.cost_per_participant * program.participants_count) + program.overhead_costs).toLocaleString()}`
+          `${program.duration_months} mo`,
+          `$${((program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0)).toLocaleString()}`
         ]);
         
         this.addTable(headers, rows);
+      }
+
+      // Detailed Program Analysis (one section per program)
+      data.programs.forEach(program => {
+        const roiCalc = data.roiCalculations[program.id];
+        const programBenefits = data.benefits[program.id] || [];
+        
+        this.checkPageBreak(60);
+        this.addSection(`${program.name}`);
+        
+        // Organization & Program Info
+        this.addText(`Organization: ${program.organization?.name || 'N/A'}`, 11, true);
+        this.addText(`Duration: ${program.duration_months} months | Participants: ${program.participants_count}`, 10);
+        
+        // Investment Breakdown
+        const participantCost = program.cost_per_participant * program.participants_count;
+        const overheadCost = program.overhead_costs || 0;
+        const totalInvestment = participantCost + overheadCost;
+        
+        this.addText('Investment Breakdown:', 11, true);
+        this.addText(`• Participant Costs: $${participantCost.toLocaleString()} ($${program.cost_per_participant.toLocaleString()} × ${program.participants_count})`, 10);
+        if (overheadCost > 0) {
+          this.addText(`• Overhead Costs: $${overheadCost.toLocaleString()}`, 10);
+        }
+        this.addText(`• Total Investment: $${totalInvestment.toLocaleString()}`, 10, true);
+
+        // ROI Metrics
+        if (roiCalc) {
+          this.currentY += 3;
+          this.addText('ROI Analysis:', 11, true);
+          this.addText(`• Return on Investment: ${roiCalc.roi.toFixed(1)}%`, 10);
+          this.addText(`• Net Present Value (NPV): $${roiCalc.npv.toLocaleString()}`, 10);
+          this.addText(`• Net Benefit: $${roiCalc.netBenefit.toLocaleString()}`, 10);
+          this.addText(`• Payback Period: ${roiCalc.paybackPeriod.toFixed(1)} years`, 10);
+          this.addText(`• Total Benefits: $${roiCalc.totalBenefits.toLocaleString()}`, 10);
+          this.addText(`• Benefit Multiple: ${(roiCalc.totalBenefits / roiCalc.totalInvestment).toFixed(2)}x`, 10);
+
+          // Yearly Breakdown if available
+          if (roiCalc.yearlyBreakdown && roiCalc.yearlyBreakdown.length > 0) {
+            this.currentY += 3;
+            this.addText('Year-by-Year Projection:', 11, true);
+            const yearHeaders = ['Year', 'Benefits', 'Costs', 'Cumulative'];
+            const yearRows = roiCalc.yearlyBreakdown.slice(0, 5).map(yr => [
+              `Year ${yr.year}`,
+              `$${yr.benefits.toLocaleString()}`,
+              `$${yr.costs.toLocaleString()}`,
+              `$${yr.cumulative.toLocaleString()}`
+            ]);
+            this.addTable(yearHeaders, yearRows);
+          }
+        } else {
+          this.addText('ROI Analysis: Not available - add benefits to calculate ROI', 10);
+        }
+
+        // Benefits Breakdown
+        if (programBenefits.length > 0) {
+          this.currentY += 3;
+          this.addText(`Benefits (${programBenefits.length} defined):`, 11, true);
+          
+          // Group by category
+          const byCategory = programBenefits.reduce((acc, b) => {
+            acc[b.category] = acc[b.category] || [];
+            acc[b.category].push(b);
+            return acc;
+          }, {} as Record<string, Benefit[]>);
+
+          Object.entries(byCategory).forEach(([category, benefits]) => {
+            const categoryTotal = benefits.reduce((sum, b) => sum + b.annual_value, 0);
+            this.addText(`${category} ($${categoryTotal.toLocaleString()} annual):`, 10, true);
+            benefits.forEach(benefit => {
+              const attributedValue = (benefit.annual_value * benefit.attribution_percentage / 100);
+              this.addText(`  • ${benefit.description}: $${benefit.annual_value.toLocaleString()}/yr @ ${benefit.attribution_percentage}% attribution = $${attributedValue.toLocaleString()}`, 9);
+            });
+          });
+
+          // Total benefits summary
+          const totalAnnualValue = programBenefits.reduce((sum, b) => sum + b.annual_value, 0);
+          const totalAttributedValue = programBenefits.reduce((sum, b) => sum + (b.annual_value * b.attribution_percentage / 100), 0);
+          this.currentY += 2;
+          this.addText(`Total Annual Value: $${totalAnnualValue.toLocaleString()} | Attributed Value: $${totalAttributedValue.toLocaleString()}`, 10, true);
+        } else {
+          this.addText('Benefits: None defined - add benefits to enable ROI calculation', 10);
+        }
+
+        this.currentY += 5;
+      });
+
+      // Key Insights Section
+      this.checkPageBreak(40);
+      this.addSection('Key Insights');
+      
+      const totalBenefits = Object.values(data.roiCalculations).reduce((sum, calc) => sum + calc.totalBenefits, 0);
+      const avgPayback = programsWithROI.length > 0 
+        ? Object.values(data.roiCalculations).reduce((sum, calc) => sum + calc.paybackPeriod, 0) / programsWithROI.length 
+        : 0;
+      
+      this.addText(`Portfolio Performance: ${programsWithROI.length} of ${data.programs.length} programs have calculated ROI metrics.`);
+      if (totalBenefits > 0) {
+        this.addText(`Total Expected Benefits: $${totalBenefits.toLocaleString()} across all programs.`);
+      }
+      if (avgPayback > 0) {
+        this.addText(`Average Payback Period: ${avgPayback.toFixed(1)} years.`);
       }
 
       // Add footnotes if requested
