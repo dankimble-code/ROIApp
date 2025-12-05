@@ -47,7 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   className="hover:opacity-80 transition-opacity"
                 >
                   <img 
-                    src="/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png" 
+                    src="/resonance-logo.png" 
                     alt="Resonance Executive Coaching" 
                     className="h-16 w-auto"
                   />

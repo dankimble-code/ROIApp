@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const resonanceLogo = '/lovable-uploads/c6e5ebea-b93f-43ad-8bda-afbe23315d8e.png';
+const resonanceLogo = '/resonance-logo.png';
 
 interface AppLoadingScreenProps {
   onComplete: () => void;
