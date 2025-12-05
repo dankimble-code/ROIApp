@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { Organization, Program, Benefit } from '@/types/coaching';
 import { useBenefits, useUpdateBenefit, useDeleteBenefit } from '@/hooks/useBenefits';
 import { BenefitForm } from '@/components/benefits/BenefitForm';
+import { BenefitDefaultsSettings } from '@/components/benefits/BenefitDefaultsSettings';
 import { EnhancedROIDashboard } from '@/components/roi/EnhancedROIDashboard';
 import { BrandSection, MetricCard } from '@/components/ui/brand-elements';
 import { TrendingUp, Users, Target, DollarSign, Edit, Trash2 } from 'lucide-react';
@@ -135,10 +136,13 @@ export function PrefilledBenefitsStep({
       {/* Program Benefits Summary */}
       <BrandSection>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-resonance-navy dark:text-white">
-            <Target className="h-5 w-5" />
-            Program Benefits & Expected Outcomes
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-resonance-navy dark:text-white">
+              <Target className="h-5 w-5" />
+              Program Benefits & Expected Outcomes
+            </CardTitle>
+            <BenefitDefaultsSettings />
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Summary Cards */}
