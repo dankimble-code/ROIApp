@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +7,8 @@ import { ArrowLeft, Download, Calculator, TrendingUp, DollarSign } from 'lucide-
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { PDFExportService } from '@/lib/pdf-export';
 import { useToast } from '@/hooks/use-toast';
+import { useProgram } from '@/hooks/usePrograms';
+import { useBenefits } from '@/hooks/useBenefits';
 
 interface CalculationPageState {
   organization: any;
@@ -19,11 +21,19 @@ export default function Calculation() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const { programId } = useParams<{ programId: string }>();
   
+  // First try to get data from location state
   const state = location.state as CalculationPageState;
-  const organization = state?.organization || {};
-  const program = state?.program || {};
-  const benefits = state?.benefits || [];
+  
+  // Fetch from database as fallback
+  const { data: dbProgram } = useProgram(programId || '');
+  const { data: dbBenefits = [] } = useBenefits(programId);
+  
+  // Use state data if available, otherwise use database data
+  const organization = state?.organization || dbProgram?.organization || {};
+  const program = state?.program || dbProgram || {};
+  const benefits = (state?.benefits && state.benefits.length > 0) ? state.benefits : dbBenefits;
   
   const participantCount = program.participants_count || 1;
   const costPerParticipant = program.cost_per_participant || 10000;
