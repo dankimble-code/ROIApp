@@ -117,37 +117,58 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
         const programBenefits = benefitsByProgram[program.id] || [];
         if (programBenefits.length === 0) return;
 
-        const totalInvestment = (program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0);
-        const annualBenefits = programBenefits.reduce((sum, b) => 
-          sum + (b.annual_value * b.attribution_percentage / 100), 0);
-        const totalBenefits = annualBenefits * program.duration_months / 12 * 3; // 3-year projection
-        const netBenefit = totalBenefits - totalInvestment;
-        const roi = totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : 0;
-        const paybackPeriod = annualBenefits > 0 ? totalInvestment / annualBenefits : 0;
+        // Use same calculation logic as useROICalculation hook
+        const totalProgramCost = (program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0);
+        const annualCosts = totalProgramCost / program.duration_months * 12;
+        const discountRate = 0.08; // Default discount rate
         
-        // Calculate NPV with 8% discount rate
-        const discountRate = 0.08;
-        let npv = -totalInvestment;
+        // Calculate total annual benefits with attribution AND confidence (matching useROICalculation)
+        const totalAnnualBenefits = programBenefits.reduce((sum, benefit) => {
+          return sum + (benefit.annual_value * program.participants_count * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100));
+        }, 0);
+
+        const analysisYears = Math.max(5, Math.ceil(program.duration_months / 12) + 2);
+        
         const yearlyBreakdown = [];
-        let cumulative = -totalInvestment;
-        
-        for (let year = 1; year <= 5; year++) {
-          const yearBenefits = annualBenefits;
-          const yearCosts = year === 1 ? totalInvestment : 0;
-          cumulative += yearBenefits - yearCosts;
-          npv += yearBenefits / Math.pow(1 + discountRate, year);
+        let cumulativeCashFlow = -totalProgramCost;
+        let npv = -totalProgramCost;
+        let paybackPeriod = 0;
+
+        for (let year = 1; year <= analysisYears; year++) {
+          const isCoachingYear = year <= Math.ceil(program.duration_months / 12);
+          const costs = isCoachingYear ? annualCosts : 0;
+          const benefits = year <= Math.ceil(program.duration_months / 12) 
+            ? totalAnnualBenefits * (year / Math.ceil(program.duration_months / 12))
+            : totalAnnualBenefits;
+
+          const netCashFlow = benefits - costs;
+          cumulativeCashFlow += netCashFlow;
+          
+          const discountedCashFlow = netCashFlow / Math.pow(1 + discountRate, year);
+          npv += discountedCashFlow;
+
+          if (paybackPeriod === 0 && cumulativeCashFlow >= 0) {
+            const previousCumulative = cumulativeCashFlow - netCashFlow;
+            paybackPeriod = year - 1 + Math.abs(previousCumulative) / netCashFlow;
+          }
+
           yearlyBreakdown.push({
             year,
-            benefits: Math.round(yearBenefits),
-            costs: Math.round(yearCosts),
-            cumulative: Math.round(cumulative)
+            benefits: Math.round(benefits),
+            costs: Math.round(costs),
+            cumulative: Math.round(cumulativeCashFlow)
           });
         }
+
+        const totalInvestment = totalProgramCost;
+        const totalBenefits = totalAnnualBenefits * analysisYears;
+        const netBenefit = totalBenefits - totalInvestment;
+        const roi = (netBenefit / totalInvestment) * 100;
 
         roiCalculations[program.id] = {
           roi: Math.round(roi * 10) / 10,
           npv: Math.round(npv),
-          paybackPeriod: Math.round(paybackPeriod * 10) / 10,
+          paybackPeriod: Math.round((paybackPeriod || analysisYears) * 10) / 10,
           totalInvestment: Math.round(totalInvestment),
           totalBenefits: Math.round(totalBenefits),
           netBenefit: Math.round(netBenefit),
