@@ -368,33 +368,39 @@ export class PDFExportService {
         // Benefits Breakdown - Table style like app display
         if (programBenefits.length > 0) {
           this.currentY += 3;
-          this.addText(`Key Benefits (${programBenefits.length} defined):`, 11, true);
           
-          // Table headers for benefits
-          const benefitHeaders = ['Category', 'Total Value', 'Attribution', 'Expected Impact'];
+          // Total Investment Summary
+          this.addText('Program Investment:', 11, true);
+          this.addText(`• Total Program Investment: $${totalInvestment.toLocaleString()}`, 10);
+          this.addText(`• Investment per Employee: $${program.cost_per_participant.toLocaleString()}`, 10);
+          this.currentY += 3;
+          
+          this.addText(`Program Benefits & Expected Outcomes (${programBenefits.length} defined):`, 11, true);
+          
+          // Table headers for benefits - renamed columns
+          const benefitHeaders = ['Category', 'Total Benefit (ROI)', 'Attribution', 'Confidence'];
           const benefitRows = programBenefits.map(benefit => {
             const totalValue = benefit.annual_value * (program.participants_count || 1);
             const attributionValue = totalValue * (benefit.attribution_percentage / 100);
-            const expectedImpact = attributionValue * (benefit.confidence_level / 100);
+            const totalBenefitROI = attributionValue * (benefit.confidence_level / 100);
             return [
               benefit.category,
-              `$${totalValue.toLocaleString()}`,
-              `$${attributionValue.toLocaleString()} (${benefit.attribution_percentage}%)`,
-              `$${expectedImpact.toLocaleString()} (${benefit.confidence_level}% conf)`
+              `$${totalBenefitROI.toLocaleString()}`,
+              `${benefit.attribution_percentage}%`,
+              `${benefit.confidence_level}%`
             ];
           });
           
           this.addTable(benefitHeaders, benefitRows);
 
           // Total benefits summary
-          const totalAnnualValue = programBenefits.reduce((sum, b) => sum + b.annual_value * (program.participants_count || 1), 0);
-          const totalExpectedImpact = programBenefits.reduce((sum, b) => {
+          const totalBenefitROI = programBenefits.reduce((sum, b) => {
             const totalValue = b.annual_value * (program.participants_count || 1);
             const attributionValue = totalValue * (b.attribution_percentage / 100);
             return sum + (attributionValue * (b.confidence_level / 100));
           }, 0);
           this.currentY += 2;
-          this.addText(`Total Annual Value: $${totalAnnualValue.toLocaleString()} | Total Expected Impact: $${totalExpectedImpact.toLocaleString()}`, 10, true);
+          this.addText(`Total Benefit (ROI): $${totalBenefitROI.toLocaleString()}`, 10, true);
         } else {
           this.addText('Benefits: None defined - add benefits to enable ROI calculation', 10);
         }
