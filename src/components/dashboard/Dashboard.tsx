@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { usePrograms } from '@/hooks/usePrograms';
 import { useBenefits } from '@/hooks/useBenefits';
 import { useBaselineScenario } from '@/hooks/useScenarios';
 import { useROICalculation } from '@/hooks/useROICalculation';
+import { useIsAdmin } from '@/hooks/useUserRole';
 import { 
   FileDown, 
   Plus, 
@@ -23,7 +25,8 @@ import {
   Target,
   BarChart3,
   PieChart,
-  Info
+  Info,
+  Shield
 } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -71,6 +74,8 @@ interface DashboardContentProps {
 }
 
 function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardContentProps) {
+  const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const { data: programs = [], isLoading } = usePrograms();
 
   // Calculate real dashboard statistics
@@ -243,6 +248,16 @@ function DashboardContent({ onShowWizard, onCompare, onExportPDF }: DashboardCon
             </div>
           </div>
           <div className="flex gap-3">
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/admin')} 
+                className="shadow-sm hover:shadow-md transition-resonance border-amber-500/50 text-amber-600 hover:bg-amber-50"
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                Admin Settings
+              </Button>
+            )}
             <Button variant="outline" onClick={handleExportPDF} className="shadow-sm hover:shadow-md transition-resonance">
               <FileDown className="mr-2 h-4 w-4" />
               Export PDF
