@@ -65,6 +65,7 @@ export function useROICalculation(
       roi,
       paybackPeriod: paybackPeriod || analysisYears,
       npv,
+      analysisYears,
       yearlyBreakdown
     };
   }, [program, benefits, scenario]);

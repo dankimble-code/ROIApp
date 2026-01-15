@@ -176,30 +176,30 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <MetricCard
-                title="Return on Investment (per year)"
+                title={`ROI (${roiCalculation.analysisYears}-Year)`}
                 value={formatPercentage(roiCalculation.roi)}
-                description="Net benefits as percentage of total investment"
+                description={`Net benefits as percentage of investment over ${roiCalculation.analysisYears} years`}
                 variant="navy"
               />
               
               <MetricCard
-                title="Net Present Value (per year)"
+                title={`NPV (${roiCalculation.analysisYears}-Year)`}
                 value={formatCurrency(roiCalculation.npv, true)}
-                description="Present value of future cash flows minus investment"
+                description={`Present value of ${roiCalculation.analysisYears}-year cash flows minus investment`}
                 variant="orange"
               />
               
               <MetricCard
-                title="Payback (months)"
-                value={roiCalculation.paybackPeriod.toString()}
+                title="Payback Period"
+                value={`${roiCalculation.paybackPeriod.toFixed(1)} months`}
                 description="Time to recover initial investment"
                 variant="navy"
               />
               
               <MetricCard
-                title="Benefit Multiple"
+                title={`Benefit Multiple (${roiCalculation.analysisYears}-Year)`}
                 value={`${(roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1)}x`}
-                description="Total benefits divided by total investment"
+                description={`Total ${roiCalculation.analysisYears}-year benefits divided by investment`}
                 variant="orange"
               />
             </div>

@@ -75,6 +75,7 @@ export interface ROICalculation {
   roi: number;
   paybackPeriod: number;
   npv: number;
+  analysisYears: number;
   yearlyBreakdown: {
     year: number;
     benefits: number;
