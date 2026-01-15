@@ -177,42 +177,73 @@ export class PDFExportService {
     this.currentY += 5;
   }
 
-  private addTable(headers: string[], rows: string[][]): void {
+  private addTable(headers: string[], rows: string[][], customWidths?: number[]): void {
     this.checkPageBreak(30);
     
     const startY = this.currentY;
-    const colWidth = (this.pageWidth - 40) / headers.length;
+    const tableWidth = this.pageWidth - 40;
+    
+    // Use custom widths if provided, otherwise calculate proportionally
+    let colWidths: number[];
+    if (customWidths && customWidths.length === headers.length) {
+      const totalRatio = customWidths.reduce((sum, w) => sum + w, 0);
+      colWidths = customWidths.map(w => (w / totalRatio) * tableWidth);
+    } else {
+      colWidths = headers.map(() => tableWidth / headers.length);
+    }
+    
+    // Calculate x positions for each column
+    const colPositions: number[] = [20];
+    for (let i = 0; i < colWidths.length - 1; i++) {
+      colPositions.push(colPositions[i] + colWidths[i]);
+    }
     
     // Headers
     this.doc.setFillColor(240, 240, 240);
-    this.doc.rect(20, startY - 5, this.pageWidth - 40, 10, 'F');
+    this.doc.rect(20, startY - 5, tableWidth, 10, 'F');
     
-    this.doc.setFontSize(12);
+    this.doc.setFontSize(10);
     this.doc.setFont('helvetica', 'bold');
     headers.forEach((header, index) => {
-      this.doc.text(header, 25 + (index * colWidth), startY);
+      const truncated = this.truncateText(header, colWidths[index] - 5, 10);
+      this.doc.text(truncated, colPositions[index] + 3, startY);
     });
     
     this.currentY = startY + 10;
     
     // Rows
     this.doc.setFont('helvetica', 'normal');
+    this.doc.setFontSize(9);
     rows.forEach((row, rowIndex) => {
       this.checkPageBreak(8);
       
       if (rowIndex % 2 === 1) {
         this.doc.setFillColor(250, 250, 250);
-        this.doc.rect(20, this.currentY - 5, this.pageWidth - 40, 8, 'F');
+        this.doc.rect(20, this.currentY - 5, tableWidth, 8, 'F');
       }
       
       row.forEach((cell, cellIndex) => {
-        this.doc.text(cell, 25 + (cellIndex * colWidth), this.currentY);
+        const truncated = this.truncateText(cell, colWidths[cellIndex] - 5, 9);
+        this.doc.text(truncated, colPositions[cellIndex] + 3, this.currentY);
       });
       
       this.currentY += 8;
     });
     
     this.currentY += 5;
+  }
+
+  private truncateText(text: string, maxWidth: number, fontSize: number): string {
+    this.doc.setFontSize(fontSize);
+    if (this.doc.getTextWidth(text) <= maxWidth) {
+      return text;
+    }
+    
+    let truncated = text;
+    while (truncated.length > 3 && this.doc.getTextWidth(truncated + '...') > maxWidth) {
+      truncated = truncated.slice(0, -1);
+    }
+    return truncated + '...';
   }
 
   private addFootnotes(sources: string[]): void {
@@ -279,7 +310,7 @@ export class PDFExportService {
         const roiRows = programsWithROI.map(program => {
           const calc = data.roiCalculations[program.id];
           return [
-            program.name.length > 20 ? program.name.substring(0, 18) + '...' : program.name,
+            program.name,
             `${calc.roi.toFixed(1)}%`,
             `$${calc.npv.toLocaleString()}`,
             `$${calc.netBenefit.toLocaleString()}`,
@@ -287,7 +318,8 @@ export class PDFExportService {
           ];
         });
         
-        this.addTable(roiHeaders, roiRows);
+        // Custom widths: Program (wider), ROI, NPV, Net Benefit, Payback
+        this.addTable(roiHeaders, roiRows, [3, 1, 2, 2, 1]);
       }
 
       // Program Overview Table
@@ -296,14 +328,15 @@ export class PDFExportService {
         
         const headers = ['Program Name', 'Organization', 'Participants', 'Duration', 'Investment'];
         const rows = data.programs.map(program => [
-          program.name.length > 15 ? program.name.substring(0, 13) + '...' : program.name,
-          (program.organization?.name || 'N/A').length > 12 ? (program.organization?.name || 'N/A').substring(0, 10) + '...' : (program.organization?.name || 'N/A'),
+          program.name,
+          program.organization?.name || 'N/A',
           program.participants_count.toString(),
           `${program.duration_months} mo`,
           `$${((program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0)).toLocaleString()}`
         ]);
         
-        this.addTable(headers, rows);
+        // Custom widths: Program (wider), Org (wider), Participants, Duration, Investment
+        this.addTable(headers, rows, [2.5, 2.5, 1, 1, 1.5]);
       }
 
       // Detailed Program Analysis (one section per program)
@@ -344,7 +377,7 @@ export class PDFExportService {
           // 5-Year Benefits Projection - Always show full 5 years
           this.currentY += 3;
           this.addText('5-Year Benefits Projection:', 11, true);
-          const yearHeaders = ['Year', 'Annual Benefits', 'Cumulative Benefits', 'Net Value'];
+          const yearHeaders = ['Year', 'Annual Benefits', 'Cumulative', 'Net Value'];
           
           // Generate 5-year projection data
           const annualBenefit = roiCalc.totalBenefits / 5; // Assuming 5-year total benefits
@@ -360,7 +393,8 @@ export class PDFExportService {
               `$${Math.round(netValue).toLocaleString()}`
             ]);
           }
-          this.addTable(yearHeaders, yearRows);
+          // Custom widths: Year, Annual, Cumulative, Net Value
+          this.addTable(yearHeaders, yearRows, [1, 2, 2, 2]);
         } else {
           this.addText('ROI Analysis: Not available - add benefits to calculate ROI', 10);
         }
@@ -380,21 +414,22 @@ export class PDFExportService {
           
           this.addText(`Program Benefits & Expected Outcomes (${programBenefits.length} defined):`, 11, true);
           
-          // Table headers for benefits - renamed columns
-          const benefitHeaders = ['Category', 'Total Benefit (ROI)', 'Attribution', 'Confidence'];
+          // Table headers for benefits - match app display style
+          const benefitHeaders = ['Benefit Category', 'Total Benefit (ROI)', 'Attribution', 'Confidence'];
           const benefitRows = programBenefits.map(benefit => {
             const totalValue = benefit.annual_value * (program.participants_count || 1);
             const attributionValue = totalValue * (benefit.attribution_percentage / 100);
             const totalBenefitROI = attributionValue * (benefit.confidence_level / 100);
             return [
               benefit.category,
-              `$${totalBenefitROI.toLocaleString()}`,
+              `$${Math.round(totalBenefitROI).toLocaleString()}`,
               `${benefit.attribution_percentage}%`,
               `${benefit.confidence_level}%`
             ];
           });
           
-          this.addTable(benefitHeaders, benefitRows);
+          // Custom widths: Category (wider), Benefit (wider), Attribution, Confidence
+          this.addTable(benefitHeaders, benefitRows, [3, 2.5, 1.5, 1.5]);
 
           // Total benefits summary
           const totalBenefitROI = programBenefits.reduce((sum, b) => {
@@ -469,7 +504,9 @@ export class PDFExportService {
         ['Payback Period', ...data.programs.map(p => `${data.calculations[p.id]?.paybackPeriod.toFixed(1) || 'N/A'} years`)]
       ];
       
-      this.addTable(headers, rows);
+      // Dynamic column widths based on number of programs
+      const colWidths = [2, ...data.programs.map(() => 3)];
+      this.addTable(headers, rows, colWidths);
 
       // Program Details
       data.programs.forEach(program => {
@@ -486,21 +523,22 @@ export class PDFExportService {
         if (programBenefits && programBenefits.length > 0) {
           this.addText('Key Benefits:', 12, true);
           
-          // Table headers for benefits
-          const benefitHeaders = ['Category', 'Total Value', 'Attribution', 'Expected Impact'];
+          // Table headers for benefits - matching app display format
+          const benefitHeaders = ['Benefit Category', 'Total Benefit (ROI)', 'Attribution', 'Confidence'];
           const benefitRows = programBenefits.map(benefit => {
             const totalValue = benefit.annual_value * (program.participants_count || 1);
             const attributionValue = totalValue * (benefit.attribution_percentage / 100);
-            const expectedImpact = attributionValue * (benefit.confidence_level / 100);
+            const totalBenefitROI = attributionValue * (benefit.confidence_level / 100);
             return [
               benefit.category,
-              `$${totalValue.toLocaleString()}`,
-              `$${attributionValue.toLocaleString()} (${benefit.attribution_percentage}%)`,
-              `$${expectedImpact.toLocaleString()} (${benefit.confidence_level}% conf)`
+              `$${Math.round(totalBenefitROI).toLocaleString()}`,
+              `${benefit.attribution_percentage}%`,
+              `${benefit.confidence_level}%`
             ];
           });
           
-          this.addTable(benefitHeaders, benefitRows);
+          // Custom widths: Category (wider), Benefit (wider), Attribution, Confidence
+          this.addTable(benefitHeaders, benefitRows, [3, 2.5, 1.5, 1.5]);
         }
       });
 
