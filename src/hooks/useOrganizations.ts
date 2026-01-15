@@ -77,14 +77,6 @@ export function useCreateOrganization() {
         throw new Error(error.message);
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'CREATE',
-        entity_type: 'organization',
-        entity_id: organization.id,
-        new_values: organization,
-      });
-
       return organization;
     },
     onSuccess: () => {
@@ -130,15 +122,6 @@ export function useUpdateOrganization() {
         throw new Error(error.message);
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'UPDATE',
-        entity_type: 'organization',
-        entity_id: id,
-        old_values: currentData,
-        new_values: organization,
-      });
-
       return organization;
     },
     onSuccess: (data) => {
@@ -182,14 +165,6 @@ export function useDeleteOrganization() {
         console.error('Error deleting organization:', error);
         throw new Error(error.message);
       }
-
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'DELETE',
-        entity_type: 'organization',
-        entity_id: id,
-        old_values: currentData,
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organizations'] });
