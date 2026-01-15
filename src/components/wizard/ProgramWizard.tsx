@@ -8,12 +8,13 @@ import { ProgramStep } from './steps/ProgramStep';
 import { BenefitsStep } from './steps/BenefitsStep';
 import { PrefilledBenefitsStep } from './steps/PrefilledBenefitsStep';
 import { ReviewStep } from './steps/ReviewStep';
-import { Organization, Program, Benefit } from '@/types/coaching';
+import { Organization, Program, Benefit, BenefitCategory } from '@/types/coaching';
 import { useCreateOrganization, useUpdateOrganization } from '@/hooks/useOrganizations';
 import { useCreateProgram, useUpdateProgram } from '@/hooks/usePrograms';
 import { useBulkCreateBenefits } from '@/hooks/useBenefits';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { UnsavedChangesDialog } from '@/components/ui/unsaved-changes-dialog';
+import { useBenefitDefaults } from '@/hooks/useBenefitDefaults';
 
 interface ProgramWizardProps {
   onComplete: () => void;
@@ -46,6 +47,7 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
   const updateOrganization = useUpdateOrganization();
   const updateProgram = useUpdateProgram();
   const bulkCreateBenefits = useBulkCreateBenefits();
+  const { defaults: benefitDefaults } = useBenefitDefaults();
 
   const isEditing = !!editingProgram;
 
@@ -141,64 +143,28 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
 
       // Only create default benefits for new programs, not when editing
       if (!isEditing) {
-        const defaultBenefits = [
-          {
-            program_id: programData.id,
-            category: 'Customer Satisfaction',
-            description: 'Improved customer relationships and satisfaction scores per participant',
-            annual_value: 10000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
-          {
-            program_id: programData.id,
-            category: 'Innovation',
-            description: 'Increased innovation and creative problem-solving per participant',
-            annual_value: 10000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
-          {
-            program_id: programData.id,
-            category: 'Decision Making',
-            description: 'Better decision-making per participant leading to cost savings and opportunities',
-            annual_value: 10000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
-          {
-            program_id: programData.id,
-            category: 'Retention Improvement',
-            description: 'Reduced turnover costs per participant through improved employee satisfaction',
-            annual_value: 15000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
-          {
-            program_id: programData.id,
-            category: 'Team Effectiveness',
-            description: 'Improved collaboration and team dynamics per participant',
-            annual_value: 10000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
-          {
-            program_id: programData.id,
-            category: 'Performance Enhancement',
-            description: 'Improved individual performance metrics per participant',
-            annual_value: 10000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
-          {
-            program_id: programData.id,
-            category: 'Productivity Gains',
-            description: 'Increased productivity from improved focus and time management skills per participant',
-            annual_value: 10000,
-            attribution_percentage: 50,
-            confidence_level: 80,
-          },
+        // Use database-driven benefit defaults
+        const categoriesToCreate: BenefitCategory[] = [
+          'Customer Satisfaction',
+          'Innovation',
+          'Decision Making',
+          'Retention Improvement',
+          'Team Effectiveness',
+          'Performance Enhancement',
+          'Productivity Gains',
         ];
+
+        const defaultBenefits = categoriesToCreate.map((category) => {
+          const template = benefitDefaults[category];
+          return {
+            program_id: programData.id,
+            category,
+            description: template.description,
+            annual_value: template.value,
+            attribution_percentage: template.attribution,
+            confidence_level: template.confidence,
+          };
+        });
 
         await bulkCreateBenefits.mutateAsync(defaultBenefits);
       }
