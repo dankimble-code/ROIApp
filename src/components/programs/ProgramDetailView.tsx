@@ -100,7 +100,7 @@ export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-muted-foreground">Per Participant</div>
+                    <div className="text-xs text-muted-foreground">Benefit per participant</div>
                     <div className="font-semibold">{formatCurrency(b.annual_value)}</div>
                   </div>
                 </div>
