@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -42,6 +42,21 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
   const [isSaving, setIsSaving] = useState(false);
   const [createdProgramId, setCreatedProgramId] = useState<string | undefined>(editingProgram?.id);
 
+  // Store initial values to compare against for detecting actual changes
+  const initialOrganization = useRef<Partial<Organization>>(
+    editingProgram?.organization ? { ...editingProgram.organization } : {}
+  );
+  const initialProgram = useRef<Partial<Program>>(
+    editingProgram ? { 
+      id: editingProgram.id,
+      name: editingProgram.name,
+      duration_months: editingProgram.duration_months,
+      participants_count: editingProgram.participants_count,
+      cost_per_participant: editingProgram.cost_per_participant,
+      overhead_costs: editingProgram.overhead_costs,
+    } : {}
+  );
+
   const createOrganization = useCreateOrganization();
   const createProgram = useCreateProgram();
   const updateOrganization = useUpdateOrganization();
@@ -57,13 +72,13 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
     message: 'You have unsaved changes in your program setup. Are you sure you want to leave?'
   });
 
-  // Mark as having unsaved changes when any data is entered
+  // Mark as having unsaved changes only when actual changes are made
   useEffect(() => {
-    const hasData = 
-      Object.keys(organization).length > 0 || 
-      Object.keys(program).length > 0 || 
-      benefits.length > 0;
-    setHasUnsavedChanges(hasData && !isSaving);
+    const orgChanged = JSON.stringify(organization) !== JSON.stringify(initialOrganization.current);
+    const programChanged = JSON.stringify(program) !== JSON.stringify(initialProgram.current);
+    const benefitsChanged = benefits.length > 0;
+    
+    setHasUnsavedChanges((orgChanged || programChanged || benefitsChanged) && !isSaving);
   }, [organization, program, benefits, isSaving]);
 
   const steps = [
