@@ -41,21 +41,9 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [createdProgramId, setCreatedProgramId] = useState<string | undefined>(editingProgram?.id);
-
-  // Store initial values to compare against for detecting actual changes
-  const initialOrganization = useRef<Partial<Organization>>(
-    editingProgram?.organization ? { ...editingProgram.organization } : {}
-  );
-  const initialProgram = useRef<Partial<Program>>(
-    editingProgram ? { 
-      id: editingProgram.id,
-      name: editingProgram.name,
-      duration_months: editingProgram.duration_months,
-      participants_count: editingProgram.participants_count,
-      cost_per_participant: editingProgram.cost_per_participant,
-      overhead_costs: editingProgram.overhead_costs,
-    } : {}
-  );
+  
+  // Track if user has actually interacted with form fields
+  const userHasInteracted = useRef(false);
 
   const createOrganization = useCreateOrganization();
   const createProgram = useCreateProgram();
@@ -72,14 +60,19 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
     message: 'You have unsaved changes in your program setup. Are you sure you want to leave?'
   });
 
-  // Mark as having unsaved changes only when actual changes are made
-  useEffect(() => {
-    const orgChanged = JSON.stringify(organization) !== JSON.stringify(initialOrganization.current);
-    const programChanged = JSON.stringify(program) !== JSON.stringify(initialProgram.current);
-    const benefitsChanged = benefits.length > 0;
-    
-    setHasUnsavedChanges((orgChanged || programChanged || benefitsChanged) && !isSaving);
-  }, [organization, program, benefits, isSaving]);
+  // Handler to mark user interaction and update organization
+  const handleOrganizationChange = (data: Partial<Organization>) => {
+    userHasInteracted.current = true;
+    setOrganization(data);
+    setHasUnsavedChanges(true);
+  };
+
+  // Handler to mark user interaction and update program
+  const handleProgramChange = (data: Partial<Program>) => {
+    userHasInteracted.current = true;
+    setProgram(data);
+    setHasUnsavedChanges(true);
+  };
 
   const steps = [
     { id: 1, title: 'Organization', description: 'Company information' },
@@ -185,6 +178,9 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
       }
       
       // Navigate directly to the calculation page with the program
+      // Reset interaction flag since we've saved successfully
+      userHasInteracted.current = false;
+      setHasUnsavedChanges(false);
       setCurrentStep(currentStep + 1);
       setIsSaving(false);
     } catch (error) {
@@ -197,7 +193,8 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
     try {
       setIsSaving(true);
       
-      // Mark as saved
+      // Mark as saved and reset interaction flag
+      userHasInteracted.current = false;
       setHasUnsavedChanges(false);
       onComplete();
     } catch (error) {
@@ -221,7 +218,7 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
         return (
           <OrganizationStep
             data={organization}
-            onChange={setOrganization}
+            onChange={handleOrganizationChange}
             onNext={handleNext}
           />
         );
@@ -229,7 +226,7 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
         return (
           <ProgramStep
             data={program}
-            onChange={setProgram}
+            onChange={handleProgramChange}
             onNext={handleNext}
             onBack={handleBack}
           />
