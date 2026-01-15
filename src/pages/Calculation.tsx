@@ -3,12 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Download, Calculator, TrendingUp, DollarSign } from 'lucide-react';
+import { ArrowLeft, Download, Calculator, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { PDFExportService } from '@/lib/pdf-export';
 import { useToast } from '@/hooks/use-toast';
 import { useProgram } from '@/hooks/usePrograms';
 import { useBenefits } from '@/hooks/useBenefits';
+import { useROICalculation } from '@/hooks/useROICalculation';
+import { useBaselineScenario } from '@/hooks/useScenarios';
 
 interface CalculationPageState {
   organization: any;
@@ -29,17 +31,37 @@ export default function Calculation() {
   // Fetch from database as fallback
   const { data: dbProgram } = useProgram(programId || '');
   const { data: dbBenefits = [] } = useBenefits(programId);
+  const { data: scenario } = useBaselineScenario(programId || '');
   
   // Use state data if available, otherwise use database data
   const organization = state?.organization || dbProgram?.organization || {};
   const program = state?.program || dbProgram || {};
   const benefits = (state?.benefits && state.benefits.length > 0) ? state.benefits : dbBenefits;
   
+  // Create effective scenario for calculation (fallback if none exists)
+  const effectiveScenario = scenario || {
+    id: 'baseline-auto',
+    program_id: programId || '',
+    name: 'Baseline',
+    description: 'Auto-generated baseline for ROI calculations',
+    discount_rate: 0.08,
+    is_baseline: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  
+  // Use the same ROI calculation hook as EnhancedROIDashboard for consistency
+  const roiCalculation = useROICalculation(
+    program?.id ? program : null,
+    benefits,
+    effectiveScenario as any
+  );
+  
   const participantCount = program.participants_count || 1;
   const costPerParticipant = program.cost_per_participant || 10000;
   const totalProgramCost = (costPerParticipant * participantCount) + (program.overhead_costs || 0);
   
-  // Calculate total benefits
+  // Calculate total benefits for display
   const totalAnnualValue = benefits.reduce((sum, benefit) => 
     sum + (benefit.annual_value || 0) * participantCount, 0
   );
@@ -48,10 +70,12 @@ export default function Calculation() {
     sum + ((benefit.annual_value || 0) * participantCount * ((benefit.attribution_percentage || 0) / 100) * ((benefit.confidence_level || 0) / 100)), 0
   );
   
-  // ROI Calculations
-  const netBenefit = totalAttributableValue - totalProgramCost;
-  const roi = totalProgramCost > 0 ? (netBenefit / totalProgramCost) * 100 : 0;
-  const paybackPeriod = totalAttributableValue > 0 ? totalProgramCost / (totalAttributableValue / 12) : 0;
+  // Use values from the hook if available, otherwise calculate manually
+  const roi = roiCalculation?.roi ?? (totalProgramCost > 0 ? ((totalAttributableValue - totalProgramCost) / totalProgramCost) * 100 : 0);
+  const npv = roiCalculation?.npv ?? 0;
+  const paybackPeriod = roiCalculation?.paybackPeriod ?? (totalAttributableValue > 0 ? totalProgramCost / (totalAttributableValue / 12) : 0);
+  const netBenefit = roiCalculation?.netBenefit ?? (totalAttributableValue - totalProgramCost);
+  const analysisYears = roiCalculation?.analysisYears ?? 5;
 
   const handleBack = () => {
     navigate('/benefits', {
@@ -171,18 +195,18 @@ export default function Calculation() {
       </div>
 
       {/* ROI Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-green-500">
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5 text-green-600" />
-              <span className="text-sm font-medium text-muted-foreground">ROI</span>
+              <span className="text-sm font-medium text-muted-foreground">ROI ({analysisYears}-Year)</span>
             </div>
             <div className="text-3xl font-bold text-green-600">
               {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {roi >= 0 ? 'Positive return' : 'Negative return'}
+              Net benefits over {analysisYears} years
             </p>
           </CardContent>
         </Card>
@@ -191,13 +215,13 @@ export default function Calculation() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">Net Benefit</span>
+              <span className="text-sm font-medium text-muted-foreground">NPV ({analysisYears}-Year)</span>
             </div>
             <div className="text-3xl font-bold text-primary">
-              {formatCurrency(netBenefit)}
+              {formatCurrency(npv)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Annual net value
+              Present value of cash flows
             </p>
           </CardContent>
         </Card>
@@ -213,6 +237,21 @@ export default function Calculation() {
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Time to break even
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-orange-500">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Percent className="h-5 w-5 text-orange-600" />
+              <span className="text-sm font-medium text-muted-foreground">Benefit Multiple</span>
+            </div>
+            <div className="text-3xl font-bold text-orange-600">
+              {roiCalculation ? (roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1) : (totalAttributableValue / totalProgramCost).toFixed(1)}x
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total benefits ÷ investment
             </p>
           </CardContent>
         </Card>
