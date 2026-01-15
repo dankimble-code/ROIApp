@@ -349,7 +349,10 @@ export default function Calculation() {
             <div>
               <span className="text-muted-foreground">Total Program Investment:</span>
               <div className="text-xl font-bold">{formatCurrency(totalProgramCost)}</div>
-              <span className="text-xs text-muted-foreground">Per employee: {formatCurrency(costPerParticipant)}</span>
+              <div className="text-xs text-muted-foreground">Per employee: {formatCurrency(costPerParticipant)}</div>
+              {(program.overhead_costs || 0) > 0 && (
+                <div className="text-xs text-muted-foreground">Overhead costs: {formatCurrency(program.overhead_costs || 0)}</div>
+              )}
             </div>
             <div>
               <span className="text-muted-foreground">Total Benefit (ROI):</span>

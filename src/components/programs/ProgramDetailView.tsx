@@ -129,7 +129,10 @@ export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
                   <div className="text-xl font-bold">
                     {formatCurrency((program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0))}
                   </div>
-                  <span className="text-xs text-muted-foreground">Per employee: {formatCurrency(program.cost_per_participant)}</span>
+                  <div className="text-xs text-muted-foreground">Per employee: {formatCurrency(program.cost_per_participant)}</div>
+                  {(program.overhead_costs || 0) > 0 && (
+                    <div className="text-xs text-muted-foreground">Overhead costs: {formatCurrency(program.overhead_costs || 0)}</div>
+                  )}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Total Benefit (ROI):</span>
