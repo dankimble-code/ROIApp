@@ -71,11 +71,23 @@ export default function Calculation() {
   );
   
   // Use values from the hook if available, otherwise calculate manually
-  const roi = roiCalculation?.roi ?? (totalProgramCost > 0 ? ((totalAttributableValue - totalProgramCost) / totalProgramCost) * 100 : 0);
-  const npv = roiCalculation?.npv ?? 0;
-  const paybackPeriod = roiCalculation?.paybackPeriod ?? (totalAttributableValue > 0 ? totalProgramCost / (totalAttributableValue / 12) : 0);
-  const netBenefit = roiCalculation?.netBenefit ?? (totalAttributableValue - totalProgramCost);
   const analysisYears = roiCalculation?.analysisYears ?? 5;
+  const roi = roiCalculation?.roi ?? (totalProgramCost > 0 ? ((totalAttributableValue * analysisYears - totalProgramCost) / totalProgramCost) * 100 : 0);
+  const paybackPeriod = roiCalculation?.paybackPeriod ?? (totalAttributableValue > 0 ? totalProgramCost / (totalAttributableValue / 12) : 0);
+  const netBenefit = roiCalculation?.netBenefit ?? (totalAttributableValue * analysisYears - totalProgramCost);
+  
+  // Calculate NPV manually if not available from hook
+  // NPV = -Initial Investment + Sum of (Annual Benefits / (1 + discount_rate)^year)
+  const discountRate = effectiveScenario.discount_rate;
+  const npv = roiCalculation?.npv ?? (() => {
+    let calculatedNpv = -totalProgramCost;
+    for (let year = 1; year <= analysisYears; year++) {
+      const annualBenefit = totalAttributableValue;
+      const discountedBenefit = annualBenefit / Math.pow(1 + discountRate, year);
+      calculatedNpv += discountedBenefit;
+    }
+    return calculatedNpv;
+  })();
 
   const handleBack = () => {
     navigate('/benefits', {
@@ -215,13 +227,13 @@ export default function Calculation() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">NPV ({analysisYears}-Year)</span>
+              <span className="text-sm font-medium text-muted-foreground">Net Present Value ({analysisYears}-Year)</span>
             </div>
             <div className="text-3xl font-bold text-primary">
               {formatCurrency(npv)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Present value of cash flows
+              Present value of future benefits minus investment
             </p>
           </CardContent>
         </Card>
