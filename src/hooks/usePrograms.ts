@@ -106,14 +106,6 @@ export function useCreateProgram() {
         throw new Error(error.message);
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'CREATE',
-        entity_type: 'program',
-        entity_id: program.id,
-        new_values: program,
-      });
-
       return program;
     },
     onSuccess: (data) => {
@@ -159,15 +151,6 @@ export function useUpdateProgram() {
         throw new Error(error.message);
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'UPDATE',
-        entity_type: 'program',
-        entity_id: id,
-        old_values: currentData,
-        new_values: program,
-      });
-
       return program;
     },
     onSuccess: (data) => {
@@ -211,14 +194,6 @@ export function useDeleteProgram() {
         console.error('Error deleting program:', error);
         throw new Error(error.message);
       }
-
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'DELETE',
-        entity_type: 'program',
-        entity_id: id,
-        old_values: currentData,
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['programs'] });
@@ -291,14 +266,6 @@ export function useDuplicateProgram() {
 
         await supabase.from('benefits').insert(benefitsCopy);
       }
-
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'DUPLICATE',
-        entity_type: 'program',
-        entity_id: newProgram.id,
-        new_values: { original_id: id, ...newProgram },
-      });
 
       return newProgram;
     },

@@ -77,14 +77,6 @@ export function useCreateBenefit() {
         throw new Error(error.message);
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'CREATE',
-        entity_type: 'benefit',
-        entity_id: benefit.id,
-        new_values: benefit,
-      });
-
       return benefit;
     },
     onSuccess: (data) => {
@@ -135,15 +127,6 @@ export function useUpdateBenefit() {
         throw new Error(error.message);
       }
 
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'UPDATE',
-        entity_type: 'benefit',
-        entity_id: id,
-        old_values: currentBenefit,
-        new_values: benefit,
-      });
-
       return benefit;
     },
     onSuccess: (data) => {
@@ -192,14 +175,6 @@ export function useDeleteBenefit() {
         console.error('Error deleting benefit:', error);
         throw new Error(error.message);
       }
-
-      // Log audit trail
-      await supabase.from('audit_logs').insert({
-        action: 'DELETE',
-        entity_type: 'benefit',
-        entity_id: id,
-        old_values: currentData,
-      });
 
       return { programId: currentData.program_id };
     },
@@ -251,16 +226,6 @@ export function useBulkCreateBenefits() {
         console.error('Error creating benefits:', error);
         throw new Error(error.message);
       }
-
-      // Log audit trail for each benefit
-      const auditLogs = data.map(benefit => ({
-        action: 'CREATE',
-        entity_type: 'benefit',
-        entity_id: benefit.id,
-        new_values: benefit,
-      }));
-
-      await supabase.from('audit_logs').insert(auditLogs);
 
       return data;
     },
