@@ -333,57 +333,68 @@ export class PDFExportService {
         // ROI Metrics
         if (roiCalc) {
           this.currentY += 3;
-          this.addText('ROI Analysis:', 11, true);
-          this.addText(`• Return on Investment: ${roiCalc.roi.toFixed(1)}%`, 10);
+          this.addText('ROI Analysis (5-Year Projection):', 11, true);
+          this.addText(`• Expected ROI (5-Year): ${roiCalc.roi.toFixed(1)}%`, 10);
           this.addText(`• Net Present Value (NPV): $${roiCalc.npv.toLocaleString()}`, 10);
           this.addText(`• Net Benefit: $${roiCalc.netBenefit.toLocaleString()}`, 10);
           this.addText(`• Payback Period: ${roiCalc.paybackPeriod.toFixed(1)} years`, 10);
-          this.addText(`• Total Benefits: $${roiCalc.totalBenefits.toLocaleString()}`, 10);
+          this.addText(`• Total Benefits (5-Year): $${roiCalc.totalBenefits.toLocaleString()}`, 10);
           this.addText(`• Benefit Multiple: ${(roiCalc.totalBenefits / roiCalc.totalInvestment).toFixed(2)}x`, 10);
 
-          // Yearly Breakdown if available
-          if (roiCalc.yearlyBreakdown && roiCalc.yearlyBreakdown.length > 0) {
-            this.currentY += 3;
-            this.addText('Year-by-Year Projection:', 11, true);
-            const yearHeaders = ['Year', 'Benefits', 'Costs', 'Cumulative'];
-            const yearRows = roiCalc.yearlyBreakdown.slice(0, 5).map(yr => [
-              `Year ${yr.year}`,
-              `$${yr.benefits.toLocaleString()}`,
-              `$${yr.costs.toLocaleString()}`,
-              `$${yr.cumulative.toLocaleString()}`
+          // 5-Year Benefits Projection - Always show full 5 years
+          this.currentY += 3;
+          this.addText('5-Year Benefits Projection:', 11, true);
+          const yearHeaders = ['Year', 'Annual Benefits', 'Cumulative Benefits', 'Net Value'];
+          
+          // Generate 5-year projection data
+          const annualBenefit = roiCalc.totalBenefits / 5; // Assuming 5-year total benefits
+          const yearRows = [];
+          let cumulativeBenefits = 0;
+          for (let year = 1; year <= 5; year++) {
+            cumulativeBenefits += annualBenefit;
+            const netValue = cumulativeBenefits - roiCalc.totalInvestment;
+            yearRows.push([
+              `Year ${year}`,
+              `$${Math.round(annualBenefit).toLocaleString()}`,
+              `$${Math.round(cumulativeBenefits).toLocaleString()}`,
+              `$${Math.round(netValue).toLocaleString()}`
             ]);
-            this.addTable(yearHeaders, yearRows);
           }
+          this.addTable(yearHeaders, yearRows);
         } else {
           this.addText('ROI Analysis: Not available - add benefits to calculate ROI', 10);
         }
 
-        // Benefits Breakdown
+        // Benefits Breakdown - Table style like app display
         if (programBenefits.length > 0) {
           this.currentY += 3;
-          this.addText(`Benefits (${programBenefits.length} defined):`, 11, true);
+          this.addText(`Key Benefits (${programBenefits.length} defined):`, 11, true);
           
-          // Group by category
-          const byCategory = programBenefits.reduce((acc, b) => {
-            acc[b.category] = acc[b.category] || [];
-            acc[b.category].push(b);
-            return acc;
-          }, {} as Record<string, Benefit[]>);
-
-          Object.entries(byCategory).forEach(([category, benefits]) => {
-            const categoryTotal = benefits.reduce((sum, b) => sum + b.annual_value, 0);
-            this.addText(`${category} ($${categoryTotal.toLocaleString()} annual):`, 10, true);
-            benefits.forEach(benefit => {
-              const attributedValue = (benefit.annual_value * benefit.attribution_percentage / 100);
-              this.addText(`  • ${benefit.description}: $${benefit.annual_value.toLocaleString()}/yr @ ${benefit.attribution_percentage}% attribution = $${attributedValue.toLocaleString()}`, 9);
-            });
+          // Table headers for benefits
+          const benefitHeaders = ['Category', 'Total Value', 'Attribution', 'Expected Impact'];
+          const benefitRows = programBenefits.map(benefit => {
+            const totalValue = benefit.annual_value * (program.participants_count || 1);
+            const attributionValue = totalValue * (benefit.attribution_percentage / 100);
+            const expectedImpact = attributionValue * (benefit.confidence_level / 100);
+            return [
+              benefit.category,
+              `$${totalValue.toLocaleString()}`,
+              `$${attributionValue.toLocaleString()} (${benefit.attribution_percentage}%)`,
+              `$${expectedImpact.toLocaleString()} (${benefit.confidence_level}% conf)`
+            ];
           });
+          
+          this.addTable(benefitHeaders, benefitRows);
 
           // Total benefits summary
-          const totalAnnualValue = programBenefits.reduce((sum, b) => sum + b.annual_value, 0);
-          const totalAttributedValue = programBenefits.reduce((sum, b) => sum + (b.annual_value * b.attribution_percentage / 100), 0);
+          const totalAnnualValue = programBenefits.reduce((sum, b) => sum + b.annual_value * (program.participants_count || 1), 0);
+          const totalExpectedImpact = programBenefits.reduce((sum, b) => {
+            const totalValue = b.annual_value * (program.participants_count || 1);
+            const attributionValue = totalValue * (b.attribution_percentage / 100);
+            return sum + (attributionValue * (b.confidence_level / 100));
+          }, 0);
           this.currentY += 2;
-          this.addText(`Total Annual Value: $${totalAnnualValue.toLocaleString()} | Attributed Value: $${totalAttributedValue.toLocaleString()}`, 10, true);
+          this.addText(`Total Annual Value: $${totalAnnualValue.toLocaleString()} | Total Expected Impact: $${totalExpectedImpact.toLocaleString()}`, 10, true);
         } else {
           this.addText('Benefits: None defined - add benefits to enable ROI calculation', 10);
         }
@@ -413,8 +424,8 @@ export class PDFExportService {
         this.addFootnotes(options.sources);
       }
 
-      // Save the PDF
-      this.doc.save(`${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+      // Save the PDF with "Resonance" prefix
+      this.doc.save(`resonance_${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     } catch (error) {
       console.error('Error generating dashboard PDF:', error);
       throw error;
@@ -445,7 +456,7 @@ export class PDFExportService {
         ['Participants', ...data.programs.map(p => p.participants_count.toString())],
         ['Cost per Participant', ...data.programs.map(p => `$${p.cost_per_participant.toLocaleString()}`)],
         ['Total Investment', ...data.programs.map(p => `$${data.calculations[p.id]?.totalInvestment.toLocaleString() || 'N/A'}`)],
-        ['Expected ROI', ...data.programs.map(p => `${data.calculations[p.id]?.roi.toFixed(1) || '0.0'}%`)],
+        ['Expected ROI (5-Year)', ...data.programs.map(p => `${data.calculations[p.id]?.roi.toFixed(1) || '0.0'}%`)],
         ['Payback Period', ...data.programs.map(p => `${data.calculations[p.id]?.paybackPeriod.toFixed(1) || 'N/A'} years`)]
       ];
       
@@ -458,16 +469,29 @@ export class PDFExportService {
         const calculation = data.calculations[program.id];
         if (calculation) {
           this.addText(`Total Investment: $${calculation.totalInvestment.toLocaleString()}`, 12, true);
-          this.addText(`Expected ROI: ${calculation.roi.toFixed(1)}%`, 12, true);
+          this.addText(`Expected ROI (5-Year): ${calculation.roi.toFixed(1)}%`, 12, true);
           this.addText(`Payback Period: ${calculation.paybackPeriod.toFixed(1)} years`, 12, true);
         }
 
         const programBenefits = data.benefits[program.id];
         if (programBenefits && programBenefits.length > 0) {
           this.addText('Key Benefits:', 12, true);
-          programBenefits.forEach(benefit => {
-            this.addText(`• ${benefit.description} (${benefit.category}): $${benefit.annual_value.toLocaleString()} annually with ${benefit.attribution_percentage}% attribution`);
+          
+          // Table headers for benefits
+          const benefitHeaders = ['Category', 'Total Value', 'Attribution', 'Expected Impact'];
+          const benefitRows = programBenefits.map(benefit => {
+            const totalValue = benefit.annual_value * (program.participants_count || 1);
+            const attributionValue = totalValue * (benefit.attribution_percentage / 100);
+            const expectedImpact = attributionValue * (benefit.confidence_level / 100);
+            return [
+              benefit.category,
+              `$${totalValue.toLocaleString()}`,
+              `$${attributionValue.toLocaleString()} (${benefit.attribution_percentage}%)`,
+              `$${expectedImpact.toLocaleString()} (${benefit.confidence_level}% conf)`
+            ];
           });
+          
+          this.addTable(benefitHeaders, benefitRows);
         }
       });
 
@@ -476,8 +500,8 @@ export class PDFExportService {
         this.addFootnotes(options.sources);
       }
 
-      // Save the PDF
-      this.doc.save(`${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+      // Save the PDF with "Resonance" prefix
+      this.doc.save(`resonance_${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     } catch (error) {
       console.error('Error generating comparison PDF:', error);
       throw error;
@@ -526,8 +550,8 @@ export class PDFExportService {
         this.addFootnotes(options.sources);
       }
 
-      // Save the PDF
-      this.doc.save(`${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+      // Save the PDF with "Resonance" prefix
+      this.doc.save(`resonance_${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     } catch (error) {
       console.error('Error generating benchmarks PDF:', error);
       throw error;
