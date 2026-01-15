@@ -478,6 +478,8 @@ export class PDFExportService {
 
   async exportComparison(data: ComparisonData, options: PDFExportOptions): Promise<void> {
     try {
+      const isSingleProgram = data.programs.length === 1;
+      
       // Load and add logo if requested
       if (options.includeLogo) {
         const logoData = await this.loadLogo();
@@ -486,61 +488,288 @@ export class PDFExportService {
 
       this.addHeader(options.title, options.subtitle, options.includeLogo);
 
-      // Comparison Summary
-      this.addSection('Comparison Summary');
-      this.addText(`This report compares ${data.programs.length} executive coaching programs across key performance and financial metrics.`);
-
-      // Comparison Table
-      this.addSection('Side-by-Side Comparison');
-      
-      const headers = ['Metric', ...data.programs.map(p => p.name)];
-      const rows = [
-        ['Organization', ...data.programs.map(p => p.organization?.name || 'N/A')],
-        ['Duration', ...data.programs.map(p => `${p.duration_months} months`)],
-        ['Participants', ...data.programs.map(p => p.participants_count.toString())],
-        ['Cost per Participant', ...data.programs.map(p => `$${p.cost_per_participant.toLocaleString()}`)],
-        ['Total Investment', ...data.programs.map(p => `$${data.calculations[p.id]?.totalInvestment.toLocaleString() || 'N/A'}`)],
-        ['Expected ROI (5-Year)', ...data.programs.map(p => `${data.calculations[p.id]?.roi.toFixed(1) || '0.0'}%`)],
-        ['Payback Period', ...data.programs.map(p => `${data.calculations[p.id]?.paybackPeriod.toFixed(1) || 'N/A'} years`)]
-      ];
-      
-      // Dynamic column widths based on number of programs
-      const colWidths = [2, ...data.programs.map(() => 3)];
-      this.addTable(headers, rows, colWidths);
-
-      // Program Details
-      data.programs.forEach(program => {
-        this.addSection(`${program.name} - Detailed Analysis`);
-        
+      // For single program, format like the ROI Calculation Summary page
+      if (isSingleProgram) {
+        const program = data.programs[0];
         const calculation = data.calculations[program.id];
-        if (calculation) {
-          this.addText(`Total Investment: $${calculation.totalInvestment.toLocaleString()}`, 12, true);
-          this.addText(`Expected ROI (5-Year): ${calculation.roi.toFixed(1)}%`, 12, true);
-          this.addText(`Payback Period: ${calculation.paybackPeriod.toFixed(1)} years`, 12, true);
-        }
+        const programBenefits = data.benefits[program.id] || [];
+        const totalInvestment = calculation?.totalInvestment || 0;
+        const overheadCosts = program.overhead_costs || 0;
+        const participantCost = program.cost_per_participant * program.participants_count;
+        const analysisYears = 5;
+        
+        // Calculate total benefit ROI
+        const totalBenefitROI = programBenefits.reduce((sum, b) => {
+          const totalValue = b.annual_value * (program.participants_count || 1);
+          const attributionValue = totalValue * (b.attribution_percentage / 100);
+          return sum + (attributionValue * (b.confidence_level / 100));
+        }, 0);
 
-        const programBenefits = data.benefits[program.id];
-        if (programBenefits && programBenefits.length > 0) {
-          this.addText('Key Benefits:', 12, true);
+        // ROI Overview Section - matching the 4-card layout
+        this.addSection('ROI Overview');
+        
+        const roiHeaders = ['ROI (5-Year)', 'Net Present Value (5-Year)', 'Payback Period', 'Benefit Multiple'];
+        const roiValues = [
+          `${calculation?.roi >= 0 ? '+' : ''}${calculation?.roi.toFixed(1) || '0.0'}%`,
+          `$${Math.round(totalBenefitROI * analysisYears - totalInvestment).toLocaleString()}`,
+          `${calculation?.paybackPeriod.toFixed(1) || 'N/A'} mo`,
+          `${((totalBenefitROI * analysisYears) / totalInvestment).toFixed(1)}x`
+        ];
+        const roiDescriptions = [
+          `Net benefits over ${analysisYears} years`,
+          'Present value of future benefits minus investment',
+          'Time to break even',
+          'Total benefits ÷ investment'
+        ];
+        
+        // Display as a formatted metrics box
+        this.doc.setFillColor(245, 250, 245);
+        this.doc.rect(20, this.currentY - 3, this.pageWidth - 40, 35, 'F');
+        
+        const metricsStartY = this.currentY;
+        const colWidth = (this.pageWidth - 40) / 4;
+        
+        roiHeaders.forEach((header, index) => {
+          const xPos = 20 + (colWidth * index) + 5;
           
-          // Table headers for benefits - matching app display format
-          const benefitHeaders = ['Benefit Category', 'Total Benefit (ROI)', 'Attribution', 'Confidence'];
-          const benefitRows = programBenefits.map(benefit => {
+          this.doc.setFontSize(8);
+          this.doc.setFont('helvetica', 'normal');
+          this.doc.setTextColor(100, 100, 100);
+          this.doc.text(header, xPos, metricsStartY);
+          
+          this.doc.setFontSize(16);
+          this.doc.setFont('helvetica', 'bold');
+          this.doc.setTextColor(34, 139, 34); // Green for positive metrics
+          this.doc.text(roiValues[index], xPos, metricsStartY + 12);
+          
+          this.doc.setFontSize(7);
+          this.doc.setFont('helvetica', 'normal');
+          this.doc.setTextColor(120, 120, 120);
+          const descLines = this.doc.splitTextToSize(roiDescriptions[index], colWidth - 10);
+          this.doc.text(descLines, xPos, metricsStartY + 20);
+        });
+        
+        this.currentY = metricsStartY + 40;
+        this.doc.setTextColor(0, 0, 0);
+
+        // Program Investment Section
+        this.addSection('Program Investment');
+        
+        // Two-column layout for Organization and Program Costs
+        const leftColX = 20;
+        const rightColX = this.pageWidth / 2 + 10;
+        const sectionStartY = this.currentY;
+        
+        // Organization column
+        this.doc.setFontSize(11);
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.text('Organization', leftColX, this.currentY);
+        this.currentY += 8;
+        
+        this.doc.setFontSize(9);
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setTextColor(100, 100, 100);
+        this.doc.text('Company:', leftColX, this.currentY);
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text(program.organization?.name || 'N/A', leftColX + 40, this.currentY);
+        this.currentY += 6;
+        
+        this.doc.setTextColor(100, 100, 100);
+        this.doc.text('Industry:', leftColX, this.currentY);
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text((program.organization as any)?.industry || 'N/A', leftColX + 40, this.currentY);
+        this.currentY += 6;
+        
+        this.doc.setTextColor(100, 100, 100);
+        this.doc.text('Employees:', leftColX, this.currentY);
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text(((program.organization as any)?.employee_count || 'N/A').toString(), leftColX + 40, this.currentY);
+        
+        // Program Costs column (start from same Y as Organization)
+        let rightY = sectionStartY;
+        this.doc.setFontSize(11);
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.text('Program Costs', rightColX, rightY);
+        rightY += 8;
+        
+        this.doc.setFontSize(9);
+        this.doc.setFont('helvetica', 'normal');
+        this.doc.setTextColor(100, 100, 100);
+        this.doc.text('Cost per participant:', rightColX, rightY);
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text(`$${program.cost_per_participant.toLocaleString()}`, rightColX + 55, rightY);
+        rightY += 6;
+        
+        this.doc.setTextColor(100, 100, 100);
+        this.doc.text('Participants:', rightColX, rightY);
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text(program.participants_count.toString(), rightColX + 55, rightY);
+        rightY += 6;
+        
+        this.doc.setTextColor(100, 100, 100);
+        this.doc.text('Overhead costs:', rightColX, rightY);
+        this.doc.setTextColor(0, 0, 0);
+        this.doc.text(`$${overheadCosts.toLocaleString()}`, rightColX + 55, rightY);
+        rightY += 8;
+        
+        // Separator line
+        this.doc.setDrawColor(200, 200, 200);
+        this.doc.line(rightColX, rightY, this.pageWidth - 20, rightY);
+        rightY += 6;
+        
+        this.doc.setFont('helvetica', 'bold');
+        this.doc.text('Total Investment:', rightColX, rightY);
+        this.doc.text(`$${totalInvestment.toLocaleString()}`, rightColX + 55, rightY);
+        
+        this.currentY = Math.max(this.currentY, rightY) + 15;
+        this.doc.setTextColor(0, 0, 0);
+
+        // Benefits Analysis Section
+        if (programBenefits.length > 0) {
+          this.addSection('Benefits Analysis');
+          
+          programBenefits.forEach((benefit, index) => {
             const totalValue = benefit.annual_value * (program.participants_count || 1);
             const attributionValue = totalValue * (benefit.attribution_percentage / 100);
-            const totalBenefitROI = attributionValue * (benefit.confidence_level / 100);
-            return [
-              benefit.category,
-              `$${Math.round(totalBenefitROI).toLocaleString()}`,
-              `${benefit.attribution_percentage}%`,
-              `${benefit.confidence_level}%`
-            ];
+            const benefitROI = attributionValue * (benefit.confidence_level / 100);
+            
+            this.checkPageBreak(25);
+            
+            // Benefit box
+            this.doc.setFillColor(250, 250, 252);
+            this.doc.roundedRect(20, this.currentY - 3, this.pageWidth - 40, 22, 2, 2, 'F');
+            
+            // Category badge and attribution/confidence badges
+            this.doc.setFontSize(8);
+            this.doc.setFont('helvetica', 'bold');
+            this.doc.setTextColor(51, 65, 122);
+            this.doc.text(benefit.category, 25, this.currentY + 3);
+            
+            // Attribution badge
+            this.doc.setFillColor(230, 230, 240);
+            this.doc.roundedRect(25 + this.doc.getTextWidth(benefit.category) + 5, this.currentY - 1, 35, 8, 2, 2, 'F');
+            this.doc.setFontSize(7);
+            this.doc.setTextColor(80, 80, 100);
+            this.doc.text(`${benefit.attribution_percentage}% attribution`, 27 + this.doc.getTextWidth(benefit.category) + 5, this.currentY + 4);
+            
+            // Confidence badge
+            const attrBadgeEnd = 25 + this.doc.getTextWidth(benefit.category) + 45;
+            this.doc.setFillColor(benefit.confidence_level >= 80 ? 220 : 240, benefit.confidence_level >= 80 ? 240 : 240, benefit.confidence_level >= 80 ? 220 : 245);
+            this.doc.roundedRect(attrBadgeEnd, this.currentY - 1, 35, 8, 2, 2, 'F');
+            this.doc.text(`${benefit.confidence_level}% confidence`, attrBadgeEnd + 2, this.currentY + 4);
+            
+            // Description
+            this.doc.setFontSize(8);
+            this.doc.setFont('helvetica', 'normal');
+            this.doc.setTextColor(100, 100, 100);
+            const descText = this.doc.splitTextToSize(benefit.description || '', this.pageWidth - 60);
+            this.doc.text(descText[0] || '', 25, this.currentY + 10);
+            
+            // Total Benefit (ROI) value
+            this.doc.setFontSize(7);
+            this.doc.setTextColor(100, 100, 100);
+            this.doc.text('Total Benefit (ROI):', 25, this.currentY + 16);
+            this.doc.setFontSize(11);
+            this.doc.setFont('helvetica', 'bold');
+            this.doc.setTextColor(51, 65, 122);
+            this.doc.text(`$${Math.round(benefitROI).toLocaleString()}`, 70, this.currentY + 16);
+            
+            this.currentY += 28;
           });
           
-          // Custom widths: Category (wider), Benefit (wider), Attribution, Confidence
-          this.addTable(benefitHeaders, benefitRows, [3, 2.5, 1.5, 1.5]);
+          // Separator
+          this.doc.setDrawColor(200, 200, 200);
+          this.doc.line(20, this.currentY, this.pageWidth - 20, this.currentY);
+          this.currentY += 10;
+          
+          // Summary totals
+          const summaryStartY = this.currentY;
+          
+          // Left: Total Program Investment
+          this.doc.setFontSize(9);
+          this.doc.setFont('helvetica', 'normal');
+          this.doc.setTextColor(100, 100, 100);
+          this.doc.text('Total Program Investment:', 20, this.currentY);
+          this.doc.setFontSize(14);
+          this.doc.setFont('helvetica', 'bold');
+          this.doc.setTextColor(0, 0, 0);
+          this.doc.text(`$${totalInvestment.toLocaleString()}`, 20, this.currentY + 8);
+          this.doc.setFontSize(8);
+          this.doc.setFont('helvetica', 'normal');
+          this.doc.setTextColor(120, 120, 120);
+          this.doc.text(`Per employee: $${program.cost_per_participant.toLocaleString()}`, 20, this.currentY + 14);
+          if (overheadCosts > 0) {
+            this.doc.text(`Overhead costs: $${overheadCosts.toLocaleString()}`, 20, this.currentY + 19);
+          }
+          
+          // Right: Total Benefit (ROI)
+          const rightX = this.pageWidth / 2 + 10;
+          this.doc.setFontSize(9);
+          this.doc.setTextColor(100, 100, 100);
+          this.doc.text('Total Benefit (ROI):', rightX, summaryStartY);
+          this.doc.setFontSize(14);
+          this.doc.setFont('helvetica', 'bold');
+          this.doc.setTextColor(51, 65, 122);
+          this.doc.text(`$${Math.round(totalBenefitROI).toLocaleString()}`, rightX, summaryStartY + 8);
+          
+          this.currentY = summaryStartY + 25;
+          this.doc.setTextColor(0, 0, 0);
         }
-      });
+
+      } else {
+        // Multiple programs - comparison format
+        this.addSection('Programs Summary');
+        this.addText(`This report analyzes ${data.programs.length} executive coaching programs across key performance and financial metrics.`);
+
+        // Side-by-Side Table
+        this.addSection('Program Metrics');
+        
+        const headers = ['Metric', ...data.programs.map(p => p.name)];
+        const rows = [
+          ['Organization', ...data.programs.map(p => p.organization?.name || 'N/A')],
+          ['Duration', ...data.programs.map(p => `${p.duration_months} months`)],
+          ['Participants', ...data.programs.map(p => p.participants_count.toString())],
+          ['Cost per Participant', ...data.programs.map(p => `$${p.cost_per_participant.toLocaleString()}`)],
+          ['Total Investment', ...data.programs.map(p => `$${data.calculations[p.id]?.totalInvestment.toLocaleString() || 'N/A'}`)],
+          ['Expected ROI (5-Year)', ...data.programs.map(p => `${data.calculations[p.id]?.roi.toFixed(1) || '0.0'}%`)],
+          ['Payback Period', ...data.programs.map(p => `${data.calculations[p.id]?.paybackPeriod.toFixed(1) || 'N/A'} mo`)]
+        ];
+        
+        const colWidths = [2, ...data.programs.map(() => 3)];
+        this.addTable(headers, rows, colWidths);
+
+        // Program Details
+        data.programs.forEach(program => {
+          this.addSection(`${program.name} - Details`);
+          
+          const calculation = data.calculations[program.id];
+          if (calculation) {
+            this.addText(`Total Investment: $${calculation.totalInvestment.toLocaleString()}`, 12, true);
+            this.addText(`Expected ROI (5-Year): ${calculation.roi.toFixed(1)}%`, 12, true);
+            this.addText(`Payback Period: ${calculation.paybackPeriod.toFixed(1)} months`, 12, true);
+          }
+
+          const programBenefits = data.benefits[program.id];
+          if (programBenefits && programBenefits.length > 0) {
+            this.addText('Benefits:', 12, true);
+            
+            const benefitHeaders = ['Benefit Category', 'Total Benefit (ROI)', 'Attribution', 'Confidence'];
+            const benefitRows = programBenefits.map(benefit => {
+              const totalValue = benefit.annual_value * (program.participants_count || 1);
+              const attributionValue = totalValue * (benefit.attribution_percentage / 100);
+              const totalBenefitROI = attributionValue * (benefit.confidence_level / 100);
+              return [
+                benefit.category,
+                `$${Math.round(totalBenefitROI).toLocaleString()}`,
+                `${benefit.attribution_percentage}%`,
+                `${benefit.confidence_level}%`
+              ];
+            });
+            
+            this.addTable(benefitHeaders, benefitRows, [3, 2.5, 1.5, 1.5]);
+          }
+        });
+      }
 
       // Add footnotes if requested
       if (options.includeFootnotes && options.sources) {
@@ -550,7 +779,7 @@ export class PDFExportService {
       // Save the PDF with "Resonance" prefix
       this.doc.save(`resonance_${options.title.replace(/\s+/g, '_').toLowerCase()}.pdf`);
     } catch (error) {
-      console.error('Error generating comparison PDF:', error);
+      console.error('Error generating PDF:', error);
       throw error;
     }
   }
