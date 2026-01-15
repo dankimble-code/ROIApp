@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Users, Calendar, DollarSign } from 'lucide-react';
 import { Program } from '@/types/coaching';
 import { formatCurrency } from '@/lib/utils';
@@ -79,33 +80,74 @@ export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
         </CardContent>
       </Card>
 
-      {/* Benefits List */}
+      {/* Benefits Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle>Benefits</CardTitle>
+          <CardTitle>Benefits Analysis</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           {isBenefitsLoading ? (
             <div className="text-sm text-muted-foreground">Loading benefits…</div>
           ) : benefits.length > 0 ? (
-            <div className="grid gap-3">
-              {benefits.map((b) => (
-                <div key={b.id} className="flex items-start justify-between p-3 rounded-md border">
-                  <div className="space-y-1">
-                    <div className="font-medium">{b.category}</div>
-                    <div className="text-sm text-muted-foreground">{b.description}</div>
-                    <div className="flex gap-2 pt-1">
-                      <Badge variant="outline">{b.attribution_percentage}% attribution</Badge>
-                      <Badge variant="outline">{b.confidence_level}% confidence</Badge>
+            <>
+              {benefits.map((benefit) => {
+                const totalValue = benefit.annual_value * program.participants_count;
+                const attributionValue = totalValue * (benefit.attribution_percentage / 100);
+                const expectedImpact = attributionValue * (benefit.confidence_level / 100);
+                
+                return (
+                  <div key={benefit.id} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant="outline">{benefit.category}</Badge>
+                          <Badge variant="secondary">
+                            {benefit.attribution_percentage}% attribution
+                          </Badge>
+                          <Badge variant={benefit.confidence_level >= 80 ? 'default' : 'outline'}>
+                            {benefit.confidence_level}% confidence
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Total Value:</span>
+                        <div className="font-medium">{formatCurrency(totalValue)}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Attribution:</span>
+                        <div className="font-medium">{formatCurrency(attributionValue)}</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Expected Impact:</span>
+                        <div className="font-medium text-primary">{formatCurrency(expectedImpact)}</div>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs text-muted-foreground">Benefit per participant</div>
-                    <div className="font-semibold">{formatCurrency(b.annual_value)}</div>
+                );
+              })}
+              
+              <Separator />
+              
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <span className="text-muted-foreground">Total Annual Value:</span>
+                  <div className="text-xl font-bold">
+                    {formatCurrency(benefits.reduce((sum, b) => sum + b.annual_value * program.participants_count, 0))}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div>
+                  <span className="text-muted-foreground">Total Expected Impact:</span>
+                  <div className="text-xl font-bold text-primary">
+                    {formatCurrency(benefits.reduce((sum, b) => 
+                      sum + (b.annual_value * program.participants_count * (b.attribution_percentage / 100) * (b.confidence_level / 100)), 0
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="text-sm text-muted-foreground">No benefits found for this program.</div>
           )}
