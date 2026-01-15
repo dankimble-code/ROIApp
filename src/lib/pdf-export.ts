@@ -373,6 +373,9 @@ export class PDFExportService {
           this.addText('Program Investment:', 11, true);
           this.addText(`• Total Program Investment: $${totalInvestment.toLocaleString()}`, 10);
           this.addText(`• Investment per Employee: $${program.cost_per_participant.toLocaleString()}`, 10);
+          if (overheadCost > 0) {
+            this.addText(`• Overhead Costs: $${overheadCost.toLocaleString()}`, 10);
+          }
           this.currentY += 3;
           
           this.addText(`Program Benefits & Expected Outcomes (${programBenefits.length} defined):`, 11, true);

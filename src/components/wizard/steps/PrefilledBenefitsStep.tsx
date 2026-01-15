@@ -150,7 +150,7 @@ export function PrefilledBenefitsStep({
             <MetricCard
               title="Total Program Investment"
               value={formatCurrency((program?.cost_per_participant || 0) * participantCount + (program?.overhead_costs || 0))}
-              description={`Per employee: ${formatCurrency(program?.cost_per_participant || 0)}`}
+              description={`Per employee: ${formatCurrency(program?.cost_per_participant || 0)}${(program?.overhead_costs || 0) > 0 ? ` • Overhead: ${formatCurrency(program?.overhead_costs || 0)}` : ''}`}
             />
             <MetricCard
               title="Total Benefit (ROI)"

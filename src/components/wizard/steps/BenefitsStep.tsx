@@ -131,6 +131,11 @@ export function BenefitsStep({ data, onChange, onNext, onBack, programId, partic
                   <p className="text-xs text-muted-foreground mt-1">
                     Per employee: {formatCurrency(program?.cost_per_participant || 0)}
                   </p>
+                  {(program?.overhead_costs || 0) > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Overhead costs: {formatCurrency(program?.overhead_costs || 0)}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
               <Card className="bg-muted/50">
