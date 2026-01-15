@@ -291,17 +291,17 @@ export default function Benefits() {
             <div className="grid grid-cols-2 gap-4">
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
-                  <div className="text-2xl font-bold">{formatCurrency(totalAnnualValue)}</div>
-                  <p className="text-sm text-muted-foreground">Total Annual Value (All Participants)</p>
+                  <div className="text-2xl font-bold">{formatCurrency((program.cost_per_participant || 0) * participantCount + (program.overhead_costs || 0))}</div>
+                  <p className="text-sm text-muted-foreground">Total Program Investment</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Per participant: {formatCurrency(totalAnnualValue / participantCount)}
+                    Per employee: {formatCurrency(program.cost_per_participant || 0)}
                   </p>
                 </CardContent>
               </Card>
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
                   <div className="text-2xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
-                  <p className="text-sm text-muted-foreground">Expected Impact (All Participants)</p>
+                  <p className="text-sm text-muted-foreground">Total Benefit (ROI)</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Per participant: {formatCurrency(totalAttributableValue / participantCount)}
                   </p>
@@ -360,16 +360,10 @@ export default function Benefits() {
                               </Badge>
                             </div>
                             <p className="text-sm mb-3">{benefit.description}</p>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="text-sm">
                               <div>
-                                <span className="text-muted-foreground">Per Participant:</span>
-                                <div className="font-medium">{formatCurrency(benefit.annual_value || 0)}</div>
-                                <span className="text-xs text-muted-foreground">Total: {formatCurrency((benefit.annual_value || 0) * participantCount)}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Expected Impact:</span>
-                                <div className="font-medium text-primary">{formatCurrency(expectedImpact)}</div>
-                                <span className="text-xs text-muted-foreground">Total: {formatCurrency(expectedImpact * participantCount)}</span>
+                                <span className="text-muted-foreground">Total Benefit (ROI):</span>
+                                <div className="font-medium text-primary text-lg">{formatCurrency(expectedImpact * participantCount)}</div>
                               </div>
                             </div>
                           </div>

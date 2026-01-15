@@ -111,18 +111,10 @@ export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
                         <p className="text-sm text-muted-foreground">{benefit.description}</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="text-sm">
                       <div>
-                        <span className="text-muted-foreground">Total Value:</span>
-                        <div className="font-medium">{formatCurrency(totalValue)}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Attribution:</span>
-                        <div className="font-medium">{formatCurrency(attributionValue)}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Expected Impact:</span>
-                        <div className="font-medium text-primary">{formatCurrency(expectedImpact)}</div>
+                        <span className="text-muted-foreground">Total Benefit (ROI):</span>
+                        <div className="font-medium text-primary text-lg">{formatCurrency(expectedImpact)}</div>
                       </div>
                     </div>
                   </div>
@@ -133,13 +125,14 @@ export function ProgramDetailView({ program, onBack }: ProgramDetailViewProps) {
               
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <span className="text-muted-foreground">Total Annual Value:</span>
+                  <span className="text-muted-foreground">Total Program Investment:</span>
                   <div className="text-xl font-bold">
-                    {formatCurrency(benefits.reduce((sum, b) => sum + b.annual_value * program.participants_count, 0))}
+                    {formatCurrency((program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0))}
                   </div>
+                  <span className="text-xs text-muted-foreground">Per employee: {formatCurrency(program.cost_per_participant)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Total Expected Impact:</span>
+                  <span className="text-muted-foreground">Total Benefit (ROI):</span>
                   <div className="text-xl font-bold text-primary">
                     {formatCurrency(benefits.reduce((sum, b) => 
                       sum + (b.annual_value * program.participants_count * (b.attribution_percentage / 100) * (b.confidence_level / 100)), 0

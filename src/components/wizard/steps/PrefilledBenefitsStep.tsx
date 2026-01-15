@@ -148,12 +148,12 @@ export function PrefilledBenefitsStep({
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <MetricCard
-              title="Total Annual Value (All Participants)"
-              value={formatCurrency(totalAnnualValue)}
-              description={`Per participant: ${formatCurrency(totalAnnualValue / participantCount)}`}
+              title="Total Program Investment"
+              value={formatCurrency((program?.cost_per_participant || 0) * participantCount + (program?.overhead_costs || 0))}
+              description={`Per employee: ${formatCurrency(program?.cost_per_participant || 0)}`}
             />
             <MetricCard
-              title="Expected Impact (All Participants)"
+              title="Total Benefit (ROI)"
               value={formatCurrency(totalExpectedImpact)}
               description={`Per participant: ${formatCurrency(totalExpectedImpact / participantCount)}`}
             />
@@ -207,23 +207,8 @@ export function PrefilledBenefitsStep({
                     </div>
                     <div className="text-right space-y-1">
                       <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground">Per Participant:</div>
-                        <div className="font-semibold text-resonance-navy dark:text-white">
-                          {formatCurrency(benefit.annual_value)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">Expected Impact:</div>
-                        <div className="font-semibold text-resonance-orange">
-                          {formatCurrency(benefit.annual_value * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100))}
-                        </div>
-                      </div>
-                      <Separator className="bg-resonance-navy/20" />
-                      <div className="space-y-1">
-                        <div className="text-sm text-muted-foreground">Total:</div>
-                        <div className="font-semibold text-resonance-navy dark:text-white">
-                          {formatCurrency(benefit.annual_value * participantCount)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">Total:</div>
-                        <div className="font-semibold text-resonance-orange">
+                        <div className="text-sm text-muted-foreground">Total Benefit (ROI):</div>
+                        <div className="font-semibold text-resonance-orange text-lg">
                           {formatCurrency(benefit.annual_value * participantCount * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100))}
                         </div>
                       </div>

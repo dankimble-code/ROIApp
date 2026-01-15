@@ -333,18 +333,10 @@ export default function Calculation() {
                     <p className="text-sm text-muted-foreground mb-2">{benefit.description}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="text-sm">
                   <div>
-                    <span className="text-muted-foreground">Total Value:</span>
-                    <div className="font-medium">{formatCurrency(totalValue)}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Attribution:</span>
-                    <div className="font-medium">{formatCurrency(totalValue * ((benefit.attribution_percentage || 0) / 100))}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Expected Impact:</span>
-                    <div className="font-medium text-primary">{formatCurrency(expectedImpact)}</div>
+                    <span className="text-muted-foreground">Total Benefit (ROI):</span>
+                    <div className="font-medium text-primary text-lg">{formatCurrency(expectedImpact)}</div>
                   </div>
                 </div>
               </div>
@@ -355,11 +347,12 @@ export default function Calculation() {
           
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <span className="text-muted-foreground">Total Annual Value:</span>
-              <div className="text-xl font-bold">{formatCurrency(totalAnnualValue)}</div>
+              <span className="text-muted-foreground">Total Program Investment:</span>
+              <div className="text-xl font-bold">{formatCurrency(totalProgramCost)}</div>
+              <span className="text-xs text-muted-foreground">Per employee: {formatCurrency(costPerParticipant)}</span>
             </div>
             <div>
-              <span className="text-muted-foreground">Total Expected Impact:</span>
+              <span className="text-muted-foreground">Total Benefit (ROI):</span>
               <div className="text-xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
             </div>
           </div>
