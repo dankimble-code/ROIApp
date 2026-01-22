@@ -14,6 +14,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { usePrograms, useDeleteProgram, useDuplicateProgram } from '@/hooks/usePrograms';
 
 interface ProgramListProps {
@@ -25,6 +35,7 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [viewingProgram, setViewingProgram] = useState<string | null>(null);
   const [editingProgram, setEditingProgram] = useState<string | null>(null);
+  const [deletingProgram, setDeletingProgram] = useState<{ id: string; name: string } | null>(null);
   
   const { data: programs = [], isLoading } = usePrograms();
   const deleteProgram = useDeleteProgram();
@@ -34,8 +45,15 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
     duplicateProgram.mutate(programId);
   };
 
-  const handleDelete = (programId: string) => {
-    deleteProgram.mutate(programId);
+  const handleDeleteClick = (programId: string, programName: string) => {
+    setDeletingProgram({ id: programId, name: programName });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingProgram) {
+      deleteProgram.mutate(deletingProgram.id);
+      setDeletingProgram(null);
+    }
   };
 
   const navigate = useNavigate();
@@ -55,7 +73,6 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
       } else if (prev.length < 3) {
         return [...prev, programId];
       } else {
-        // Toast would be handled by the hook, but we can add a simple alert here
         alert("You can only compare up to 3 programs at once");
         return prev;
       }
@@ -115,139 +132,162 @@ export function ProgramList({ onCompare, onShowWizard }: ProgramListProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {selectedPrograms.length > 0 && (
-        <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-          <div>
-            <p className="font-medium">
-              {selectedPrograms.length} program{selectedPrograms.length > 1 ? 's' : ''} selected
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Select up to 3 programs to compare
-            </p>
+    <>
+      <div className="space-y-4">
+        {selectedPrograms.length > 0 && (
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div>
+              <p className="font-medium">
+                {selectedPrograms.length} program{selectedPrograms.length > 1 ? 's' : ''} selected
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Select up to 3 programs to compare
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setSelectedPrograms([])}
+              >
+                Clear
+              </Button>
+              <Button
+                onClick={() => onCompare(selectedPrograms)}
+                disabled={selectedPrograms.length < 2}
+              >
+                Compare ({selectedPrograms.length})
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setSelectedPrograms([])}
-            >
-              Clear
-            </Button>
-            <Button
-              onClick={() => onCompare(selectedPrograms)}
-              disabled={selectedPrograms.length < 2}
-            >
-              Compare ({selectedPrograms.length})
-            </Button>
-          </div>
-        </div>
-      )}
+        )}
 
-      <div className="grid gap-4">
-        {programs.map((program) => (
-          <Card 
-            key={program.id}
-            className={`card-watermark transition-all duration-300 cursor-pointer border shadow-resonance hover:shadow-elevated ${
-              selectedPrograms.includes(program.id) 
-                ? 'border-primary bg-gradient-to-r from-primary/5 to-accent/5 shadow-glow' 
-                : 'border-border/50 bg-gradient-card hover:border-primary/30'
-            }`}
-            onClick={() => handleViewDetails(program.id)}
-          >
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{program.name}</CardTitle>
-                  <CardDescription>
-                    {program.organization?.name} • {program.participants_count} participants
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
-                    {program.duration_months} months
-                  </Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewDetails(program.id);
-                      }}>
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(program.id);
-                      }}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        toggleProgramSelection(program.id);
-                      }}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        {selectedPrograms.includes(program.id) ? 'Remove from Comparison' : 'Select for Comparison'}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => {
-                        e.stopPropagation();
-                        handleDuplicate(program.id);
-                      }}>
-                        <Copy className="mr-2 h-4 w-4" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        className="text-destructive"
-                        onClick={(e) => {
+        <div className="grid gap-4">
+          {programs.map((program) => (
+            <Card 
+              key={program.id}
+              className={`card-watermark transition-all duration-300 cursor-pointer border shadow-resonance hover:shadow-elevated ${
+                selectedPrograms.includes(program.id) 
+                  ? 'border-primary bg-gradient-to-r from-primary/5 to-accent/5 shadow-glow' 
+                  : 'border-border/50 bg-gradient-card hover:border-primary/30'
+              }`}
+              onClick={() => handleViewDetails(program.id)}
+            >
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{program.name}</CardTitle>
+                    <CardDescription>
+                      {program.organization?.name} • {program.participants_count} participants
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {program.duration_months} months
+                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(program.id);
-                        }}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          handleViewDetails(program.id);
+                        }}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(program.id);
+                        }}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          toggleProgramSelection(program.id);
+                        }}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          {selectedPrograms.includes(program.id) ? 'Remove from Comparison' : 'Select for Comparison'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleDuplicate(program.id);
+                        }}>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(program.id, program.name);
+                          }}
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Cost per Participant</p>
-                  <p className="font-medium">
-                    ${program.cost_per_participant.toLocaleString()}
-                  </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Cost per Participant</p>
+                    <p className="font-medium">
+                      ${program.cost_per_participant.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Total Investment</p>
+                    <p className="font-medium">
+                      ${((program.cost_per_participant * program.participants_count) + program.overhead_costs).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Duration</p>
+                    <p className="font-medium">{program.duration_months} months</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge variant="outline">Active</Badge>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-muted-foreground">Total Investment</p>
-                  <p className="font-medium">
-                    ${((program.cost_per_participant * program.participants_count) + program.overhead_costs).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Duration</p>
-                  <p className="font-medium">{program.duration_months} months</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Status</p>
-                  <Badge variant="outline">Active</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingProgram} onOpenChange={(open) => !open && setDeletingProgram(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Program</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingProgram?.name}"? This action cannot be undone and will permanently remove the program and all associated benefits data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Program
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
