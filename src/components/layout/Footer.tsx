@@ -96,9 +96,21 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 pt-6 border-t border-primary-foreground/20">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
-            <p className="text-xs text-primary-foreground/60">
-              © 2024 Resonance Executive Coaching. All rights reserved.
-            </p>
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+              <p className="text-xs text-primary-foreground/60">
+                © 2024 Resonance Executive Coaching. All rights reserved.
+              </p>
+              <p className="text-xs text-primary-foreground/40">
+                Build: {new Date(__BUILD_TIME__).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: '2-digit', 
+                  day: '2-digit'
+                })} {new Date(__BUILD_TIME__).toLocaleTimeString('en-US', { 
+                  hour: '2-digit', 
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
             <div className="flex space-x-6 text-xs text-primary-foreground/60">
               <a href="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</a>
               <a href="/terms-of-service" className="hover:text-accent transition-colors">Terms of Service</a>
