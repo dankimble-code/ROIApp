@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, Check } from 'lucide-react';
 import { OrganizationStep } from './steps/OrganizationStep';
 import { ProgramStep } from './steps/ProgramStep';
-import { BenefitsStep } from './steps/BenefitsStep';
-import { PrefilledBenefitsStep } from './steps/PrefilledBenefitsStep';
-import { ReviewStep } from './steps/ReviewStep';
 import { Organization, Program, Benefit, BenefitCategory } from '@/types/coaching';
 import { useCreateOrganization, useUpdateOrganization } from '@/hooks/useOrganizations';
 import { useCreateProgram, useUpdateProgram } from '@/hooks/usePrograms';
@@ -23,6 +21,7 @@ interface ProgramWizardProps {
 }
 
 export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramWizardProps) {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [organization, setOrganization] = useState<Partial<Organization>>(
     editingProgram?.organization ? { ...editingProgram.organization } : {}
@@ -37,10 +36,8 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
       overhead_costs: editingProgram.overhead_costs,
     } : {}
   );
-  const [benefits, setBenefits] = useState<Partial<Benefit>[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [createdProgramId, setCreatedProgramId] = useState<string | undefined>(editingProgram?.id);
   
   // Track if user has actually interacted with form fields
   const userHasInteracted = useRef(false);
@@ -74,22 +71,21 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
     setHasUnsavedChanges(true);
   };
 
+  // Simplified to 2 steps - then navigate to calculation page
   const steps = [
     { id: 1, title: 'Organization', description: 'Company information' },
     { id: 2, title: 'Program Details', description: 'Coaching program setup' },
-    { id: 3, title: 'Benefits', description: 'Expected outcomes' },
-    { id: 4, title: 'Review', description: 'Confirm and create' },
   ];
 
   const totalSteps = steps.length;
   const progress = (currentStep / totalSteps) * 100;
 
   const handleNext = async () => {
-    if (currentStep === 2 && currentStep + 1 === 3) {
-      // Auto-create benefits when moving from Program Details to Benefits
-      await createProgramAndBenefits();
-    } else if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep === 1) {
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      // On step 2, create program/benefits and navigate to calculation page
+      await createProgramAndNavigate();
     }
   };
 
@@ -99,11 +95,11 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
     }
   };
 
-  const createProgramAndBenefits = async () => {
+  const createProgramAndNavigate = async () => {
     try {
       setIsSaving(true);
       
-      let orgData, programData;
+      let programData;
       
       if (isEditing && editingProgram) {
         // Update existing organization and program
@@ -116,7 +112,6 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
               employee_count: organization.employee_count,
             }
           });
-          orgData = editingProgram.organization;
         }
 
         programData = await updateProgram.mutateAsync({
@@ -129,10 +124,9 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
             overhead_costs: program.overhead_costs || 0,
           }
         });
-        setCreatedProgramId(editingProgram.id);
       } else {
         // Create new organization and program
-        orgData = await createOrganization.mutateAsync({
+        const orgData = await createOrganization.mutateAsync({
           name: organization.name!,
           industry: organization.industry,
           employee_count: organization.employee_count,
@@ -146,7 +140,6 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
           cost_per_participant: program.cost_per_participant!,
           overhead_costs: program.overhead_costs || 0,
         });
-        setCreatedProgramId(programData.id);
       }
 
       // Only create default benefits for new programs, not when editing
@@ -177,28 +170,16 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
         await bulkCreateBenefits.mutateAsync(defaultBenefits);
       }
       
-      // Navigate directly to the calculation page with the program
       // Reset interaction flag since we've saved successfully
       userHasInteracted.current = false;
       setHasUnsavedChanges(false);
-      setCurrentStep(currentStep + 1);
       setIsSaving(false);
+      
+      // Navigate directly to ROI Calculation Summary page
+      const programId = isEditing ? editingProgram.id : programData.id;
+      navigate(`/calculation/${programId}`);
     } catch (error) {
       console.error('Error creating program and benefits:', error);
-      setIsSaving(false);
-    }
-  };
-
-  const handleComplete = async () => {
-    try {
-      setIsSaving(true);
-      
-      // Mark as saved and reset interaction flag
-      userHasInteracted.current = false;
-      setHasUnsavedChanges(false);
-      onComplete();
-    } catch (error) {
-      console.error('Error completing program:', error);
       setIsSaving(false);
     }
   };
@@ -228,27 +209,6 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
             data={program}
             onChange={handleProgramChange}
             onNext={handleNext}
-            onBack={handleBack}
-          />
-        );
-      case 3:
-        return (
-          <PrefilledBenefitsStep
-            onNext={handleNext}
-            onBack={handleBack}
-            programId={createdProgramId}
-            participantCount={program.participants_count || 1}
-            organization={organization}
-            program={program}
-          />
-        );
-      case 4:
-        return (
-          <ReviewStep
-            organization={organization}
-            program={program}
-            benefits={benefits}
-            onComplete={handleComplete}
             onBack={handleBack}
           />
         );
@@ -296,7 +256,7 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
       </Card>
 
       {/* Step Navigation */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {steps.map((step) => (
           <Card 
             key={step.id} 
