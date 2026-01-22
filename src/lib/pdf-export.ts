@@ -650,13 +650,14 @@ export class PDFExportService {
             this.doc.setFillColor(230, 230, 240);
             this.doc.roundedRect(25 + this.doc.getTextWidth(benefit.category) + 5, this.currentY - 1, 35, 8, 2, 2, 'F');
             this.doc.setFontSize(7);
-            this.doc.setTextColor(80, 80, 100);
+            this.doc.setTextColor(51, 65, 122);  // Resonance Navy for better contrast
             this.doc.text(`${benefit.attribution_percentage}% attribution`, 27 + this.doc.getTextWidth(benefit.category) + 5, this.currentY + 4);
             
             // Confidence badge
             const attrBadgeEnd = 25 + this.doc.getTextWidth(benefit.category) + 45;
             this.doc.setFillColor(benefit.confidence_level >= 80 ? 220 : 240, benefit.confidence_level >= 80 ? 240 : 240, benefit.confidence_level >= 80 ? 220 : 245);
             this.doc.roundedRect(attrBadgeEnd, this.currentY - 1, 35, 8, 2, 2, 'F');
+            this.doc.setTextColor(51, 65, 122);  // Resonance Navy for better contrast
             this.doc.text(`${benefit.confidence_level}% confidence`, attrBadgeEnd + 2, this.currentY + 4);
             
             // Description
