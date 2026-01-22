@@ -83,7 +83,7 @@ export function ROIExplanationPanel({
           </div>
           <div className="text-center p-3 bg-muted/50 rounded-lg">
             <div className="text-2xl font-bold">
-              {roiCalculation.paybackPeriod} mo
+              {(Math.round(roiCalculation.paybackPeriod * 10) / 10).toFixed(1)} mo
             </div>
             <div className="text-sm text-muted-foreground">Payback</div>
           </div>
@@ -219,7 +219,7 @@ export function ROIExplanationPanel({
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Payback Period:</span>
                   <span className="text-lg font-bold">
-                    {roiCalculation.paybackPeriod} months
+                    {(Math.round(roiCalculation.paybackPeriod * 10) / 10).toFixed(1)} months
                   </span>
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
