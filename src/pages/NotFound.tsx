@@ -39,7 +39,7 @@ const NotFound = () => {
           title="Page Not Found"
           description={`The page "${location.pathname}" doesn't exist. You may have mistyped the URL or the page may have been moved.`}
           action={{
-            label: "Return to Dashboard",
+            label: "Return to Programs",
             onClick: () => navigate('/'),
             variant: 'default'
           }}

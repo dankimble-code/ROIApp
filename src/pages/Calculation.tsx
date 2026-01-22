@@ -329,15 +329,15 @@ export default function Calculation() {
               <h2 className="text-xl font-semibold">Financial Analysis Charts</h2>
               <Badge variant="outline" className="text-xs">Over {analysisYears} Years</Badge>
             </div>
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="w-full">
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+              <div className="min-w-0 overflow-hidden">
                 <ROIChart 
                   roiCalculation={roiCalculation}
                   type="cashflow"
                   title={`Annual Cash Flow Analysis (${analysisYears}-Year Period)`}
                 />
               </div>
-              <div className="w-full">
+              <div className="min-w-0 overflow-hidden">
                 <ROIChart 
                   roiCalculation={roiCalculation}
                   type="cumulative"

@@ -20,7 +20,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
         <BrandedLoader 
           size="xl" 
-          message="Initializing Your ROI Dashboard..." 
+          message="Loading your programs..." 
           variant="resonance"
         />
       </div>
