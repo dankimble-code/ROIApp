@@ -139,7 +139,7 @@ export function PrefilledBenefitsStep({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-resonance-navy dark:text-white">
               <Target className="h-5 w-5" />
-              Program Benefits & Expected Outcomes
+              Program Benefits Summary
             </CardTitle>
             <BenefitDefaultsSettings />
           </div>

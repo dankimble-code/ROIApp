@@ -310,13 +310,13 @@ export function BenefitForm({
               </div>
             </div>
 
-            {/* Expected Impact Preview */}
+            {/* Total Benefit Preview */}
             {annualValue && !isNaN(parseFloat(annualValue)) && (
               <Card className="bg-muted/50">
                 <CardContent className="pt-4">
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">Expected Annual Impact:</span>
+                      <span className="text-sm font-medium">Total Annual Benefit:</span>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
