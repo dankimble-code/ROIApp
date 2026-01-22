@@ -124,7 +124,7 @@ export default function AdminSettings() {
             </p>
             <Button variant="outline" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              Back to Programs
             </Button>
           </CardContent>
         </Card>

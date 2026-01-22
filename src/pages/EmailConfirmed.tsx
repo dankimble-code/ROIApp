@@ -47,7 +47,7 @@ const EmailConfirmed = () => {
           <CardContent className="space-y-6">
             <div className="text-center space-y-4">
               <p className="text-muted-foreground">
-                Your email has been successfully verified. You can now access your ROI Dashboard and start analyzing the benefits of executive coaching on your organization.
+                Your email has been successfully verified. You can now access your programs and start analyzing the benefits of executive coaching on your organization.
               </p>
               
               <div className="pt-4">
@@ -56,7 +56,7 @@ const EmailConfirmed = () => {
                   className="w-full"
                   size="lg"
                 >
-                  Continue to Dashboard
+                  Continue to Programs
                 </Button>
               </div>
             </div>
