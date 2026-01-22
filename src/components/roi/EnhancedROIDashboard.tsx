@@ -191,14 +191,14 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
               
               <MetricCard
                 title="Payback Period"
-                value={`${roiCalculation.paybackPeriod.toFixed(1)} months`}
+                value={`${(Math.round(roiCalculation.paybackPeriod * 10) / 10).toFixed(1)} months`}
                 description="Time to recover initial investment"
                 variant="navy"
               />
               
               <MetricCard
                 title={`Benefit Multiple (${roiCalculation.analysisYears}-Year)`}
-                value={`${(roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1)}x`}
+                value={`${(Math.round((roiCalculation.totalBenefits / roiCalculation.totalInvestment) * 10) / 10).toFixed(1)}x`}
                 description={`Total ${roiCalculation.analysisYears}-year benefits divided by investment`}
                 variant="orange"
               />

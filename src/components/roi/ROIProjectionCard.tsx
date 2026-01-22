@@ -137,7 +137,7 @@ export function ROIProjectionCard({ program }: ROIProjectionCardProps) {
             <Badge variant="outline">
               {roiCalculation.paybackPeriod > 5 
                 ? '5+ years' 
-                : `${roiCalculation.paybackPeriod.toFixed(1)} years`
+                : `${(Math.round(roiCalculation.paybackPeriod * 10) / 10).toFixed(1)} years`
               }
             </Badge>
           </div>
