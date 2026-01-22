@@ -56,10 +56,28 @@ export default function Calculation() {
     benefits,
     effectiveScenario as any
   );
+
+  // Log state for debugging NPV issues
+  console.log('[Calculation Page] State:', {
+    hasLocationState: !!state,
+    hasDbProgram: !!dbProgram,
+    programId: programId,
+    programName: program?.name,
+    benefitsCount: benefits.length,
+    hasScenario: !!scenario,
+    roiCalculationExists: !!roiCalculation,
+    roiNpv: roiCalculation?.npv,
+    roiIsValid: roiCalculation?.isValid,
+    roiErrors: roiCalculation?.validationErrors,
+  });
   
   const participantCount = program.participants_count || 1;
   const costPerParticipant = program.cost_per_participant || 10000;
   const totalProgramCost = (costPerParticipant * participantCount) + (program.overhead_costs || 0);
+  
+  // Validation flags
+  const hasValidInputs = totalProgramCost > 0 && benefits.length > 0;
+  const isCalculationValid = roiCalculation?.isValid ?? hasValidInputs;
   
   // Calculate total benefits for display
   const totalAnnualValue = benefits.reduce((sum, benefit) => 
@@ -80,14 +98,27 @@ export default function Calculation() {
   // NPV = -Initial Investment + Sum of (Annual Benefits / (1 + discount_rate)^year)
   const discountRate = effectiveScenario.discount_rate;
   const npv = roiCalculation?.npv ?? (() => {
+    if (totalProgramCost <= 0 || totalAttributableValue <= 0) {
+      console.log('[Calculation Page] NPV fallback skipped - invalid inputs:', { totalProgramCost, totalAttributableValue });
+      return null; // Return null to indicate invalid calculation
+    }
     let calculatedNpv = -totalProgramCost;
     for (let year = 1; year <= analysisYears; year++) {
       const annualBenefit = totalAttributableValue;
       const discountedBenefit = annualBenefit / Math.pow(1 + discountRate, year);
       calculatedNpv += discountedBenefit;
     }
+    console.log('[Calculation Page] NPV fallback calculated:', calculatedNpv);
     return calculatedNpv;
   })();
+
+  // Helper to format values or show N/A
+  const formatValueOrNA = (value: number | null | undefined, formatter: (v: number) => string): string => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return 'N/A';
+    }
+    return formatter(value);
+  };
 
   const handleBack = () => {
     navigate('/benefits', {
@@ -206,6 +237,26 @@ export default function Calculation() {
         </div>
       </div>
 
+      {/* Validation Warning */}
+      {!isCalculationValid && (
+        <Card className="border-l-4 border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+              <Calculator className="h-5 w-5" />
+              <span className="font-medium">Calculation Notice</span>
+            </div>
+            <p className="text-sm text-yellow-600 dark:text-yellow-500 mt-1">
+              Some values may be incomplete. Please ensure all program costs and benefits are entered.
+              {roiCalculation?.validationErrors && roiCalculation.validationErrors.length > 0 && (
+                <span className="block mt-1 text-xs">
+                  Issues: {roiCalculation.validationErrors.join(', ')}
+                </span>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ROI Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-green-500">
@@ -215,7 +266,7 @@ export default function Calculation() {
               <span className="text-sm font-medium text-muted-foreground">ROI ({analysisYears}-Year)</span>
             </div>
             <div className="text-3xl font-bold text-green-600">
-              {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+              {formatValueOrNA(roi, (v) => `${v >= 0 ? '+' : ''}${v.toFixed(1)}%`)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Net benefits over {analysisYears} years
@@ -230,7 +281,7 @@ export default function Calculation() {
               <span className="text-sm font-medium text-muted-foreground">Net Present Value ({analysisYears}-Year)</span>
             </div>
             <div className="text-3xl font-bold text-primary">
-              {formatCurrency(npv)}
+              {formatValueOrNA(npv, formatCurrency)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Present value of future benefits minus investment
@@ -245,7 +296,7 @@ export default function Calculation() {
               <span className="text-sm font-medium text-muted-foreground">Payback Period</span>
             </div>
             <div className="text-3xl font-bold text-blue-600">
-              {paybackPeriod.toFixed(1)} mo
+              {formatValueOrNA(paybackPeriod, (v) => `${v.toFixed(1)} mo`)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Time to break even
@@ -260,7 +311,10 @@ export default function Calculation() {
               <span className="text-sm font-medium text-muted-foreground">Benefit Multiple</span>
             </div>
             <div className="text-3xl font-bold text-orange-600">
-              {roiCalculation ? (roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1) : (totalAttributableValue / totalProgramCost).toFixed(1)}x
+              {formatValueOrNA(
+                roiCalculation ? (roiCalculation.totalBenefits / roiCalculation.totalInvestment) : (totalProgramCost > 0 ? totalAttributableValue / totalProgramCost : null),
+                (v) => `${v.toFixed(1)}x`
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Total benefits ÷ investment

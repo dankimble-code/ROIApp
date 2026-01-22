@@ -1,24 +1,112 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { Program, Benefit, Scenario, ROICalculation, SensitivityData } from '@/types/coaching';
+
+// Extended return type to include validation state
+export interface ROICalculationResult extends ROICalculation {
+  isValid: boolean;
+  validationErrors: string[];
+}
 
 export function useROICalculation(
   program: Program | null,
   benefits: Benefit[],
   scenario: Scenario | null
-): ROICalculation | null {
-  return useMemo(() => {
-    if (!program || !scenario || benefits.length === 0) return null;
+): ROICalculationResult | null {
+  const previousNpv = useRef<number | null>(null);
+  const calculationCount = useRef(0);
 
-    const totalProgramCost = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
-    const annualCosts = totalProgramCost / program.duration_months * 12;
+  const result = useMemo(() => {
+    calculationCount.current += 1;
+    const calcId = calculationCount.current;
+    
+    // Collect validation errors instead of silently returning null
+    const validationErrors: string[] = [];
+    
+    // Log inputs for debugging
+    console.log(`[ROI Calc #${calcId}] Inputs:`, {
+      hasProgram: !!program,
+      programId: program?.id,
+      programName: program?.name,
+      costPerParticipant: program?.cost_per_participant,
+      participantsCount: program?.participants_count,
+      overheadCosts: program?.overhead_costs,
+      durationMonths: program?.duration_months,
+      benefitsCount: benefits.length,
+      hasScenario: !!scenario,
+      discountRate: scenario?.discount_rate,
+    });
+
+    // Validate required inputs
+    if (!program) {
+      validationErrors.push('Program data not loaded');
+    }
+    if (!scenario) {
+      validationErrors.push('Scenario data not loaded');
+    }
+    if (benefits.length === 0) {
+      validationErrors.push('No benefits defined');
+    }
+
+    // If missing critical data, return null with validation info
+    if (!program || !scenario || benefits.length === 0) {
+      console.log(`[ROI Calc #${calcId}] Skipped - validation errors:`, validationErrors);
+      return null;
+    }
+
+    // Validate numeric inputs
+    const costPerParticipant = program.cost_per_participant;
+    const participantsCount = program.participants_count;
+    const overheadCosts = program.overhead_costs ?? 0;
+    const durationMonths = program.duration_months;
+    const discountRate = scenario.discount_rate;
+
+    if (typeof costPerParticipant !== 'number' || isNaN(costPerParticipant) || costPerParticipant < 0) {
+      validationErrors.push(`Invalid cost per participant: ${costPerParticipant}`);
+    }
+    if (typeof participantsCount !== 'number' || isNaN(participantsCount) || participantsCount <= 0) {
+      validationErrors.push(`Invalid participants count: ${participantsCount}`);
+    }
+    if (typeof durationMonths !== 'number' || isNaN(durationMonths) || durationMonths <= 0) {
+      validationErrors.push(`Invalid duration months: ${durationMonths}`);
+    }
+    if (typeof discountRate !== 'number' || isNaN(discountRate)) {
+      validationErrors.push(`Invalid discount rate: ${discountRate}`);
+    }
+
+    // Calculate total program cost with safety checks
+    const totalProgramCost = (costPerParticipant * participantsCount) + overheadCosts;
+    
+    if (totalProgramCost <= 0) {
+      validationErrors.push(`Total program cost is zero or negative: ${totalProgramCost}`);
+    }
+
+    const annualCosts = totalProgramCost / durationMonths * 12;
     
     // Calculate total annual benefits with attribution (benefits are stored per participant)
-    const totalAnnualBenefits = benefits.reduce((sum, benefit) => {
-      return sum + (benefit.annual_value * program.participants_count * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100));
+    const totalAnnualBenefits = benefits.reduce((sum, benefit, idx) => {
+      const annualValue = benefit.annual_value ?? 0;
+      const attribution = benefit.attribution_percentage ?? 0;
+      const confidence = benefit.confidence_level ?? 0;
+      
+      // Validate each benefit
+      if (typeof annualValue !== 'number' || isNaN(annualValue)) {
+        validationErrors.push(`Benefit ${idx}: Invalid annual value: ${annualValue}`);
+        return sum;
+      }
+      if (typeof attribution !== 'number' || isNaN(attribution)) {
+        validationErrors.push(`Benefit ${idx}: Invalid attribution: ${attribution}`);
+        return sum;
+      }
+      if (typeof confidence !== 'number' || isNaN(confidence)) {
+        validationErrors.push(`Benefit ${idx}: Invalid confidence: ${confidence}`);
+        return sum;
+      }
+      
+      return sum + (annualValue * participantsCount * (attribution / 100) * (confidence / 100));
     }, 0);
 
-    const discountRate = scenario.discount_rate;
-    const analysisYears = Math.max(5, Math.ceil(program.duration_months / 12) + 2);
+    const safeDiscountRate = Math.max(0, discountRate);
+    const analysisYears = Math.max(5, Math.ceil(durationMonths / 12) + 2);
 
     const yearlyBreakdown = [];
     let cumulativeCashFlow = -totalProgramCost;
@@ -26,26 +114,27 @@ export function useROICalculation(
     let paybackPeriod = 0;
 
     for (let year = 1; year <= analysisYears; year++) {
-      const isCoachingYear = year <= Math.ceil(program.duration_months / 12);
+      const isCoachingYear = year <= Math.ceil(durationMonths / 12);
       const costs = isCoachingYear ? annualCosts : 0;
-      const benefits = year <= Math.ceil(program.duration_months / 12) ? 
-        totalAnnualBenefits * (year / Math.ceil(program.duration_months / 12)) : 
+      const yearBenefits = year <= Math.ceil(durationMonths / 12) ? 
+        totalAnnualBenefits * (year / Math.ceil(durationMonths / 12)) : 
         totalAnnualBenefits;
 
-      const netCashFlow = benefits - costs;
+      const netCashFlow = yearBenefits - costs;
       cumulativeCashFlow += netCashFlow;
       
-      const discountedCashFlow = netCashFlow / Math.pow(1 + discountRate, year);
+      const discountFactor = Math.pow(1 + safeDiscountRate, year);
+      const discountedCashFlow = discountFactor > 0 ? netCashFlow / discountFactor : 0;
       npv += discountedCashFlow;
 
-      if (paybackPeriod === 0 && cumulativeCashFlow >= 0) {
+      if (paybackPeriod === 0 && cumulativeCashFlow >= 0 && netCashFlow > 0) {
         const previousCumulative = cumulativeCashFlow - netCashFlow;
         paybackPeriod = year - 1 + Math.abs(previousCumulative) / netCashFlow;
       }
 
       yearlyBreakdown.push({
         year,
-        benefits,
+        benefits: yearBenefits,
         costs,
         netCashFlow,
         cumulativeCashFlow,
@@ -56,7 +145,25 @@ export function useROICalculation(
     const totalInvestment = totalProgramCost;
     const totalBenefits = totalAnnualBenefits * analysisYears;
     const netBenefit = totalBenefits - totalInvestment;
-    const roi = (netBenefit / totalInvestment) * 100;
+    const roi = totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : 0;
+
+    // Log the calculated values
+    console.log(`[ROI Calc #${calcId}] Output:`, {
+      totalInvestment,
+      totalBenefits,
+      netBenefit,
+      roi: roi.toFixed(2),
+      paybackPeriod: (paybackPeriod || analysisYears).toFixed(2),
+      npv: npv.toFixed(2),
+      analysisYears,
+      validationErrors,
+    });
+
+    // Check for NPV changes
+    if (previousNpv.current !== null && Math.abs(previousNpv.current - npv) > 0.01) {
+      console.warn(`[ROI Calc #${calcId}] NPV CHANGED from ${previousNpv.current.toFixed(2)} to ${npv.toFixed(2)}`);
+    }
+    previousNpv.current = npv;
 
     return {
       totalInvestment,
@@ -66,9 +173,27 @@ export function useROICalculation(
       paybackPeriod: paybackPeriod || analysisYears,
       npv,
       analysisYears,
-      yearlyBreakdown
+      yearlyBreakdown,
+      isValid: validationErrors.length === 0,
+      validationErrors,
     };
   }, [program, benefits, scenario]);
+
+  // Log when calculation result changes
+  useEffect(() => {
+    if (result) {
+      console.log('[ROI Calc] Result updated:', {
+        npv: result.npv.toFixed(2),
+        roi: result.roi.toFixed(2),
+        isValid: result.isValid,
+        errorCount: result.validationErrors.length,
+      });
+    } else {
+      console.log('[ROI Calc] Result is null (missing inputs)');
+    }
+  }, [result]);
+
+  return result;
 }
 
 export function useSensitivityAnalysis(
