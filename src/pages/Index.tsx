@@ -7,6 +7,7 @@ import { useIsAdmin } from '@/hooks/useUserRole';
 import { ProgramWizard } from '@/components/wizard/ProgramWizard';
 import { ProgramList } from '@/components/programs/ProgramList';
 import { CompareView } from '@/components/compare/CompareView';
+import { ExportProgramDialog } from '@/components/export/ExportProgramDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +31,8 @@ const Index = () => {
   
   const [showWizard, setShowWizard] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
 
   if (loading) {
@@ -54,14 +57,16 @@ const Index = () => {
     sum + (program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0), 0
   );
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (programIds: string[]) => {
+    setIsExporting(true);
     try {
       const { PDFExportService } = await import('@/lib/pdf-export');
       const { supabase } = await import('@/integrations/supabase/client');
       const pdfService = new PDFExportService();
       
-      // Fetch all benefits for all programs
-      const programIds = programs.map(p => p.id);
+      const selectedPrograms = programs.filter(p => programIds.includes(p.id));
+      
+      // Fetch all benefits for selected programs
       const { data: allBenefits } = await supabase
         .from('benefits')
         .select('*')
@@ -79,7 +84,7 @@ const Index = () => {
       // Calculate ROI for each program
       const roiCalculations: Record<string, any> = {};
 
-      programs.forEach(program => {
+      selectedPrograms.forEach(program => {
         const programBenefits = benefitsByProgram[program.id] || [];
         if (programBenefits.length === 0) return;
 
@@ -140,8 +145,16 @@ const Index = () => {
         };
       });
 
+      const selectedTotalInvestment = selectedPrograms.reduce((sum, program) => 
+        sum + (program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0), 0
+      );
+      const selectedTotalParticipants = selectedPrograms.reduce((sum, program) => sum + program.participants_count, 0);
+
+      // Build the report URL linking back to the app
+      const reportUrl = window.location.origin;
+
       const dashboardData = {
-        programs: programs.map(p => ({ 
+        programs: selectedPrograms.map(p => ({ 
           ...p, 
           organization: { 
             id: p.organization_id || 'temp-id',
@@ -156,18 +169,23 @@ const Index = () => {
         benefits: benefitsByProgram,
         roiCalculations,
         stats: {
-          activePrograms: totalPrograms,
+          activePrograms: selectedPrograms.length,
           averageROI: 425,
-          totalInvestment: totalInvestment,
-          totalParticipants: totalParticipants
+          totalInvestment: selectedTotalInvestment,
+          totalParticipants: selectedTotalParticipants
         }
       };
 
       await pdfService.exportDashboard(dashboardData, {
-        title: 'Executive Coaching ROI Dashboard Report',
-        subtitle: 'Comprehensive analysis of coaching programs and their return on investment',
+        title: selectedPrograms.length === 1 
+          ? `ROI Analysis: ${selectedPrograms[0].name}`
+          : 'Executive Coaching ROI Dashboard Report',
+        subtitle: selectedPrograms.length === 1
+          ? `Comprehensive ROI analysis for ${selectedPrograms[0].organization?.name || 'Unknown Organization'}`
+          : `Comprehensive analysis of ${selectedPrograms.length} coaching programs and their return on investment`,
         includeLogo: true,
         includeFootnotes: true,
+        reportUrl,
         sources: [
           'Resonance Executive Coaching Internal Analytics',
           'Industry benchmarks from PwC, MetrixGlobal, and Center for Creative Leadership studies',
@@ -175,8 +193,12 @@ const Index = () => {
         ],
         author: 'Resonance Executive Coaching'
       });
+
+      setShowExportDialog(false);
     } catch (error) {
       console.error('Error exporting dashboard PDF:', error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -240,7 +262,7 @@ const Index = () => {
                   Admin Settings
                 </Button>
               )}
-              <Button variant="outline" onClick={handleExportPDF} className="shadow-sm hover:shadow-md transition-resonance">
+              <Button variant="outline" onClick={() => setShowExportDialog(true)} className="shadow-sm hover:shadow-md transition-resonance">
                 <FileDown className="mr-2 h-4 w-4" />
                 Export PDF
               </Button>
@@ -299,6 +321,14 @@ const Index = () => {
           </div>
         </div>
       </TooltipProvider>
+
+      <ExportProgramDialog
+        open={showExportDialog}
+        onOpenChange={setShowExportDialog}
+        programs={programs}
+        onExport={handleExportPDF}
+        isExporting={isExporting}
+      />
     </AppLayout>
   );
 };

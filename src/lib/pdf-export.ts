@@ -9,6 +9,7 @@ export interface PDFExportOptions {
   includeFootnotes?: boolean;
   sources?: string[];
   author?: string;
+  reportUrl?: string;
 }
 
 export interface ProgramROIData {
@@ -246,37 +247,101 @@ export class PDFExportService {
     return truncated + '...';
   }
 
-  private addFootnotes(sources: string[]): void {
-    // Go to bottom of last page
-    const pageCount = this.doc.getNumberOfPages();
-    this.doc.setPage(pageCount);
-    this.currentY = this.pageHeight - 40;
+  private addFootnotes(sources: string[], reportUrl?: string): void {
+    // Start a new page for references
+    this.doc.addPage();
+    this.currentY = 20;
 
-    this.doc.setFontSize(10);
+    // Section title
+    this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Sources & References:', 20, this.currentY);
-    this.currentY += 6;
+    this.doc.setTextColor(51, 65, 122);
+    this.doc.text('Sources & Research References', 20, this.currentY);
+    this.currentY += 12;
+
+    // Link back to original report
+    if (reportUrl) {
+      this.doc.setFontSize(10);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.setTextColor(51, 65, 122);
+      this.doc.text('View Original Report Online:', 20, this.currentY);
+      this.currentY += 6;
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setTextColor(30, 100, 200);
+      this.doc.textWithLink(reportUrl, 20, this.currentY, { url: reportUrl });
+      this.currentY += 10;
+    }
+
+    // Custom sources
+    if (sources.length > 0) {
+      this.doc.setFontSize(11);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.setTextColor(51, 65, 122);
+      this.doc.text('Data Sources:', 20, this.currentY);
+      this.currentY += 7;
+
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.setFontSize(9);
+      this.doc.setTextColor(60, 60, 60);
+      sources.forEach((source, index) => {
+        const text = `${index + 1}. ${source}`;
+        const lines = this.doc.splitTextToSize(text, this.pageWidth - 40);
+        lines.forEach((line: string) => {
+          this.checkPageBreak(6);
+          this.doc.text(line, 25, this.currentY);
+          this.currentY += 5;
+        });
+      });
+      this.currentY += 5;
+    }
+
+    // Comprehensive research references
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(51, 65, 122);
+    this.doc.text('Research References:', 20, this.currentY);
+    this.currentY += 7;
+
+    const researchReferences = [
+      'International Coaching Federation (ICF). (2023). "ICF Global Coaching Study." https://coachingfederation.org/research/global-coaching-study',
+      'MetrixGlobal LLC. (2001). "Executive Coaching Delivers ROI of Almost 600%." Merrill C. Anderson, Ph.D.',
+      'PricewaterhouseCoopers (PwC) & Association Resource Centre. (2009). "ICF Global Coaching Client Study: Executive Summary."',
+      'Center for Creative Leadership. (2022). "The Business Case for Executive Coaching." CCL Research Report.',
+      'Manchester Inc. (2001). "Executive Coaching Yields Return on Investment of Almost Six Times the Cost." The Manchester Review, 6(1).',
+      'Bersin by Deloitte. (2019). "High-Impact Leadership Development Study." Deloitte Development LLC.',
+      'Harvard Business Review. (2009). "What Can Coaches Do for You?" Diane Coutu and Carol Kauffman.',
+      'Corporate Leadership Council. (2004). "Driving Performance and Retention Through Employee Engagement." Corporate Executive Board.',
+      'Goldsmith, M. & Lyons, L. (2006). "Coaching for Leadership: Writings on Leadership from the World\'s Greatest Coaches." Pfeiffer/Wiley.',
+      'De Meuse, K.P., Dai, G., & Lee, R.J. (2009). "Evaluating the effectiveness of executive coaching: Beyond ROI?" Coaching: An International Journal of Theory, Research and Practice, 2(2).',
+      'Grant, A.M. (2014). "The Efficacy of Executive Coaching in Times of Organisational Change." Journal of Change Management, 14(2).',
+      'Theeboom, T., Beersma, B., & van Vianen, A.E.M. (2014). "Does coaching work? A meta-analysis." The Journal of Positive Psychology, 9(1).',
+    ];
 
     this.doc.setFont('helvetica', 'normal');
-    sources.forEach((source, index) => {
-      const text = `${index + 1}. ${source}`;
-      const lines = this.doc.splitTextToSize(text, this.pageWidth - 40);
+    this.doc.setFontSize(8);
+    this.doc.setTextColor(60, 60, 60);
+    researchReferences.forEach((ref, index) => {
+      this.checkPageBreak(10);
+      const text = `${index + 1}. ${ref}`;
+      const lines = this.doc.splitTextToSize(text, this.pageWidth - 45);
       lines.forEach((line: string) => {
-        if (this.currentY > this.pageHeight - 20) {
-          this.doc.addPage();
-          this.currentY = 20;
-        }
-        this.doc.text(line, 20, this.currentY);
-        this.currentY += 4;
+        this.checkPageBreak(5);
+        this.doc.text(line, 25, this.currentY);
+        this.currentY += 4.5;
       });
+      this.currentY += 2;
     });
 
     // Generated by footer
-    this.currentY += 5;
+    this.currentY += 10;
+    this.checkPageBreak(20);
+    this.doc.setDrawColor(200, 200, 200);
+    this.doc.line(20, this.currentY, this.pageWidth - 20, this.currentY);
+    this.currentY += 8;
     this.doc.setFontSize(8);
     this.doc.setTextColor(150, 150, 150);
     const timestamp = new Date().toLocaleString();
-    this.doc.text(`Generated by Resonance Executive Coaching ROI Dashboard - ${timestamp}`, 20, this.currentY);
+    this.doc.text(`Generated by Resonance Executive Coaching ROI Dashboard — ${timestamp}`, 20, this.currentY);
     this.currentY += 4;
     const buildTime = typeof __BUILD_TIME__ !== 'undefined' ? new Date(__BUILD_TIME__).toLocaleString() : 'Development';
     this.doc.text(`Build Version: ${buildTime}`, 20, this.currentY);
@@ -371,6 +436,7 @@ export class PDFExportService {
           this.addText(`• Expected ROI (5-Year): ${roiCalc.roi.toFixed(1)}%`, 10);
           this.addText(`• Net Present Value (NPV): $${roiCalc.npv.toLocaleString()}`, 10);
           this.addText(`• Net Benefit: $${roiCalc.netBenefit.toLocaleString()}`, 10);
+          this.doc.setTextColor(0, 0, 0);
           this.addText(`• Payback Period: ${roiCalc.paybackPeriod.toFixed(1)} years`, 10);
           this.addText(`• Total Benefits (5-Year): $${roiCalc.totalBenefits.toLocaleString()}`, 10);
           this.addText(`• Benefit Multiple: ${(roiCalc.totalBenefits / roiCalc.totalInvestment).toFixed(2)}x`, 10);
@@ -466,7 +532,7 @@ export class PDFExportService {
 
       // Add footnotes if requested
       if (options.includeFootnotes && options.sources) {
-        this.addFootnotes(options.sources);
+        this.addFootnotes(options.sources, options.reportUrl);
       }
 
       // Save the PDF with "Resonance" prefix
@@ -540,7 +606,7 @@ export class PDFExportService {
           
           this.doc.setFontSize(16);
           this.doc.setFont('helvetica', 'bold');
-          this.doc.setTextColor(34, 139, 34); // Green for positive metrics
+          this.doc.setTextColor(51, 65, 122); // Resonance Navy - legible on all backgrounds
           this.doc.text(roiValues[index], xPos, metricsStartY + 12);
           
           this.doc.setFontSize(7);
@@ -775,7 +841,7 @@ export class PDFExportService {
 
       // Add footnotes if requested
       if (options.includeFootnotes && options.sources) {
-        this.addFootnotes(options.sources);
+        this.addFootnotes(options.sources, options.reportUrl);
       }
 
       // Save the PDF with "Resonance" prefix
@@ -825,7 +891,7 @@ export class PDFExportService {
 
       // Add footnotes if requested
       if (options.includeFootnotes && options.sources) {
-        this.addFootnotes(options.sources);
+        this.addFootnotes(options.sources, options.reportUrl);
       }
 
       // Save the PDF with "Resonance" prefix
