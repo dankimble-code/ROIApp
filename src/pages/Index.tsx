@@ -8,6 +8,7 @@ import { ProgramWizard } from '@/components/wizard/ProgramWizard';
 import { ProgramList } from '@/components/programs/ProgramList';
 import { CompareView } from '@/components/compare/CompareView';
 import { ExportProgramDialog } from '@/components/export/ExportProgramDialog';
+import { ExportOptionsDialog } from '@/components/export/ExportOptionsDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +32,7 @@ const Index = () => {
   
   const [showWizard, setShowWizard] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showExportOptions, setShowExportOptions] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [selectedProgramIds, setSelectedProgramIds] = useState<string[]>([]);
@@ -262,7 +264,7 @@ const Index = () => {
                   Admin Settings
                 </Button>
               )}
-              <Button variant="outline" onClick={() => setShowExportDialog(true)} className="shadow-sm hover:shadow-md transition-resonance">
+              <Button variant="outline" onClick={() => setShowExportOptions(true)} className="shadow-sm hover:shadow-md transition-resonance">
                 <FileDown className="mr-2 h-4 w-4" />
                 Export PDF
               </Button>
@@ -321,6 +323,15 @@ const Index = () => {
           </div>
         </div>
       </TooltipProvider>
+
+      <ExportOptionsDialog
+        open={showExportOptions}
+        onOpenChange={setShowExportOptions}
+        onSelectPrograms={() => setShowExportDialog(true)}
+        onExportAll={() => handleExportPDF(programs.map(p => p.id))}
+        programCount={programs.length}
+        isExporting={isExporting}
+      />
 
       <ExportProgramDialog
         open={showExportDialog}

@@ -7,12 +7,15 @@ import { ArrowLeft, Download, Calculator, TrendingUp, DollarSign, Percent, BarCh
 import { formatCurrency, formatPercentage } from '@/lib/utils';
 import { PDFExportService } from '@/lib/pdf-export';
 import { useToast } from '@/hooks/use-toast';
-import { useProgram } from '@/hooks/usePrograms';
+import { useProgram, usePrograms } from '@/hooks/usePrograms';
 import { useBenefits } from '@/hooks/useBenefits';
 import { useROICalculation } from '@/hooks/useROICalculation';
 import { useBaselineScenario } from '@/hooks/useScenarios';
 import { ROIChart } from '@/components/roi/ROIChart';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ExportOptionsDialog } from '@/components/export/ExportOptionsDialog';
+import { ExportProgramDialog } from '@/components/export/ExportProgramDialog';
+import { useState } from 'react';
 
 interface CalculationPageState {
   organization: any;
@@ -27,6 +30,10 @@ export default function Calculation() {
   const location = useLocation();
   const { programId } = useParams<{ programId: string }>();
   
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [showExportPicker, setShowExportPicker] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  
   // First try to get data from location state
   const state = location.state as CalculationPageState;
   
@@ -34,6 +41,7 @@ export default function Calculation() {
   const { data: dbProgram } = useProgram(programId || '');
   const { data: dbBenefits = [] } = useBenefits(programId);
   const { data: scenario } = useBaselineScenario(programId || '');
+  const { data: allPrograms = [] } = usePrograms();
   
   // Use state data if available, otherwise use database data
   const organization = state?.organization || dbProgram?.organization || {};
@@ -147,7 +155,7 @@ export default function Calculation() {
       
       // Create properly structured program object for export
       const exportProgram = {
-        id: 'calculation-program',
+        id: programId || 'calculation-program',
         name: program.name || 'Executive Coaching Program',
         duration_months: program.duration_months || 12,
         participants_count: participantCount,
@@ -168,16 +176,16 @@ export default function Calculation() {
       
       // Prepare calculation data for export
       const calculationData = {
-        'calculation-program': {
+        [exportProgram.id]: {
           roi: roi,
-          paybackPeriod: paybackPeriod / 12, // Convert months to years
+          paybackPeriod: paybackPeriod / 12,
           totalInvestment: totalProgramCost,
           totalBenefits: totalAttributableValue
         }
       };
 
       const benefitData = {
-        'calculation-program': benefits
+        [exportProgram.id]: benefits
       };
 
       await pdfService.exportComparison(
@@ -209,6 +217,86 @@ export default function Calculation() {
     }
   };
 
+  const handleExportMultiple = async (programIds: string[]) => {
+    setIsExporting(true);
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      const pdfService = new PDFExportService();
+      
+      const selectedPrograms = allPrograms.filter(p => programIds.includes(p.id));
+      
+      const { data: allBenefitsData } = await supabase
+        .from('benefits')
+        .select('*')
+        .in('program_id', programIds);
+      
+      const benefitsByProgram: Record<string, any[]> = {};
+      (allBenefitsData || []).forEach(benefit => {
+        if (!benefitsByProgram[benefit.program_id]) {
+          benefitsByProgram[benefit.program_id] = [];
+        }
+        benefitsByProgram[benefit.program_id].push(benefit);
+      });
+
+      const roiCalculations: Record<string, any> = {};
+      selectedPrograms.forEach(prog => {
+        const progBenefits = benefitsByProgram[prog.id] || [];
+        if (progBenefits.length === 0) return;
+        const totalCost = (prog.cost_per_participant * prog.participants_count) + (prog.overhead_costs || 0);
+        const annualCosts = totalCost / prog.duration_months * 12;
+        const discountRateCalc = 0.08;
+        const totalAnnualBenefits = progBenefits.reduce((sum: number, b: any) =>
+          sum + (b.annual_value * prog.participants_count * (b.attribution_percentage / 100) * (b.confidence_level / 100)), 0);
+        const years = Math.max(5, Math.ceil(prog.duration_months / 12) + 2);
+        let cumCF = -totalCost;
+        let npvCalc = -totalCost;
+        let pp = 0;
+        for (let y = 1; y <= years; y++) {
+          const isCoaching = y <= Math.ceil(prog.duration_months / 12);
+          const costs = isCoaching ? annualCosts : 0;
+          const ben = y <= Math.ceil(prog.duration_months / 12) ? totalAnnualBenefits * (y / Math.ceil(prog.duration_months / 12)) : totalAnnualBenefits;
+          const net = ben - costs;
+          cumCF += net;
+          npvCalc += net / Math.pow(1 + discountRateCalc, y);
+          if (pp === 0 && cumCF >= 0) {
+            const prev = cumCF - net;
+            pp = y - 1 + Math.abs(prev) / net;
+          }
+        }
+        const totalBen = totalAnnualBenefits * years;
+        const netBen = totalBen - totalCost;
+        roiCalculations[prog.id] = {
+          roi: Math.round((netBen / totalCost) * 1000) / 10,
+          npv: Math.round(npvCalc),
+          paybackPeriod: Math.round((pp || years) * 10) / 10,
+          totalInvestment: Math.round(totalCost),
+          totalBenefits: Math.round(totalBen),
+          netBenefit: Math.round(netBen),
+        };
+      });
+
+      await pdfService.exportDashboard({
+        programs: selectedPrograms.map(p => ({ ...p, organization: { id: p.organization_id || '', user_id: '', name: p.organization?.name || '', industry: p.organization?.industry || '', employee_count: p.organization?.employee_count || null, created_at: '', updated_at: '' } })),
+        benefits: benefitsByProgram,
+        roiCalculations,
+        stats: { activePrograms: selectedPrograms.length, averageROI: 0, totalInvestment: selectedPrograms.reduce((s, p) => s + (p.cost_per_participant * p.participants_count) + (p.overhead_costs || 0), 0), totalParticipants: selectedPrograms.reduce((s, p) => s + p.participants_count, 0) },
+      }, {
+        title: selectedPrograms.length === 1 ? `ROI Analysis: ${selectedPrograms[0].name}` : 'Executive Coaching ROI Dashboard Report',
+        subtitle: selectedPrograms.length === 1 ? `Comprehensive ROI analysis for ${selectedPrograms[0].organization?.name || ''}` : `Comprehensive analysis of ${selectedPrograms.length} coaching programs`,
+        includeLogo: true,
+        includeFootnotes: true,
+        reportUrl: window.location.origin,
+        sources: ['Resonance Executive Coaching Internal Analytics', 'Industry benchmarks from PwC, MetrixGlobal, and Center for Creative Leadership studies'],
+        author: 'Resonance Executive Coaching',
+      });
+      setShowExportPicker(false);
+    } catch (error) {
+      console.error('Error exporting:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Check if we have valid ROI calculation data for charts
   const hasChartData = roiCalculation && roiCalculation.yearlyBreakdown && roiCalculation.yearlyBreakdown.length > 0;
 
@@ -228,7 +316,7 @@ export default function Calculation() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Programs
             </Button>
-            <Button variant="outline" onClick={handleExportReport}>
+            <Button variant="outline" onClick={() => setShowExportOptions(true)}>
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -569,13 +657,33 @@ export default function Calculation() {
             <Button variant="outline" onClick={handleSaveAnalysis}>
               Save Analysis
             </Button>
-            <Button onClick={handleExportReport}>
+            <Button onClick={() => setShowExportOptions(true)}>
               <Download className="h-4 w-4 mr-2" />
               Generate Report
             </Button>
           </div>
         </div>
       </div>
+
+      <ExportOptionsDialog
+        open={showExportOptions}
+        onOpenChange={setShowExportOptions}
+        showCurrentOption={true}
+        currentProgramName={program.name}
+        onExportCurrent={handleExportReport}
+        onSelectPrograms={() => setShowExportPicker(true)}
+        onExportAll={() => handleExportMultiple(allPrograms.map(p => p.id))}
+        programCount={allPrograms.length}
+        isExporting={isExporting}
+      />
+
+      <ExportProgramDialog
+        open={showExportPicker}
+        onOpenChange={setShowExportPicker}
+        programs={allPrograms}
+        onExport={handleExportMultiple}
+        isExporting={isExporting}
+      />
     </AppLayout>
   );
 }
