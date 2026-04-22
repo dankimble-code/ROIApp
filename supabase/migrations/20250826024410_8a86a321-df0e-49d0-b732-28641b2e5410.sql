@@ -213,7 +213,7 @@ BEGIN
   AND id != COALESCE(NEW.id, '00000000-0000-0000-0000-000000000000'::uuid);
   
   IF (total_attribution + NEW.attribution_percentage) > 100 THEN
-    RAISE EXCEPTION 'Total attribution percentage cannot exceed 100%%. Current total: %%, Attempting to add: %%', 
+    RAISE EXCEPTION 'Total attribution percentage cannot exceed 100%%. Current total: %, Attempting to add: %', 
       total_attribution, NEW.attribution_percentage;
   END IF;
   

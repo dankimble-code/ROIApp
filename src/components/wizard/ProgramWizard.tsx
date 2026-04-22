@@ -20,6 +20,24 @@ interface ProgramWizardProps {
   editingProgram?: Program & { organization?: Organization };
 }
 
+const MAX_TOTAL_DEFAULT_ATTRIBUTION = 100;
+const FALLBACK_DEFAULT_ATTRIBUTION = 10;
+
+function getSeedAttributions(
+  categories: BenefitCategory[],
+  defaults: ReturnType<typeof useBenefitDefaults>['defaults']
+) {
+  const configuredAttributions = categories.map((category) => defaults[category].attribution);
+  const totalAttribution = configuredAttributions.reduce((sum, value) => sum + value, 0);
+
+  if (totalAttribution <= MAX_TOTAL_DEFAULT_ATTRIBUTION) {
+    return configuredAttributions;
+  }
+
+  // Keep the initial seed safely under the DB trigger limit even if admin defaults sum above 100.
+  return categories.map(() => FALLBACK_DEFAULT_ATTRIBUTION);
+}
+
 export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramWizardProps) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -154,15 +172,16 @@ export function ProgramWizard({ onComplete, onCancel, editingProgram }: ProgramW
           'Performance Enhancement',
           'Productivity Gains',
         ];
+        const seedAttributions = getSeedAttributions(categoriesToCreate, benefitDefaults);
 
-        const defaultBenefits = categoriesToCreate.map((category) => {
+        const defaultBenefits = categoriesToCreate.map((category, index) => {
           const template = benefitDefaults[category];
           return {
             program_id: programData.id,
             category,
             description: template.description,
             annual_value: template.value,
-            attribution_percentage: template.attribution,
+            attribution_percentage: seedAttributions[index],
             confidence_level: template.confidence,
           };
         });

@@ -16,9 +16,20 @@ WHERE id IN (
 );
 
 -- Now add the unique constraint to prevent future duplicates
-ALTER TABLE public.benefits
-ADD CONSTRAINT benefits_program_category_unique 
-UNIQUE (program_id, category);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.benefits'::regclass
+      AND conname = 'benefits_program_category_unique'
+  ) THEN
+    ALTER TABLE public.benefits
+    ADD CONSTRAINT benefits_program_category_unique
+    UNIQUE (program_id, category);
+  END IF;
+END
+$$;
 
 -- Add index for better query performance
 CREATE INDEX IF NOT EXISTS idx_benefits_program_category 
