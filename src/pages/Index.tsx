@@ -23,6 +23,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { BrandedLoader } from '@/components/ui/branded-loader';
+import { calculateProgramROI } from '@/lib/roi-calculations';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -90,60 +91,28 @@ const Index = () => {
         const programBenefits = benefitsByProgram[program.id] || [];
         if (programBenefits.length === 0) return;
 
-        const totalProgramCost = (program.cost_per_participant * program.participants_count) + (program.overhead_costs || 0);
-        const annualCosts = totalProgramCost / program.duration_months * 12;
-        const discountRate = 0.08;
-        
-        const totalAnnualBenefits = programBenefits.reduce((sum, benefit) => {
-          return sum + (benefit.annual_value * program.participants_count * (benefit.attribution_percentage / 100) * (benefit.confidence_level / 100));
-        }, 0);
-
-        const analysisYears = Math.max(5, Math.ceil(program.duration_months / 12) + 2);
-        
-        const yearlyBreakdown = [];
-        let cumulativeCashFlow = -totalProgramCost;
-        let npv = -totalProgramCost;
-        let paybackPeriod = 0;
-
-        for (let year = 1; year <= analysisYears; year++) {
-          const isCoachingYear = year <= Math.ceil(program.duration_months / 12);
-          const costs = isCoachingYear ? annualCosts : 0;
-          const benefits = year <= Math.ceil(program.duration_months / 12) 
-            ? totalAnnualBenefits * (year / Math.ceil(program.duration_months / 12))
-            : totalAnnualBenefits;
-
-          const netCashFlow = benefits - costs;
-          cumulativeCashFlow += netCashFlow;
-          
-          const discountedCashFlow = netCashFlow / Math.pow(1 + discountRate, year);
-          npv += discountedCashFlow;
-
-          if (paybackPeriod === 0 && cumulativeCashFlow >= 0) {
-            const previousCumulative = cumulativeCashFlow - netCashFlow;
-            paybackPeriod = year - 1 + Math.abs(previousCumulative) / netCashFlow;
-          }
-
-          yearlyBreakdown.push({
-            year,
-            benefits: Math.round(benefits),
-            costs: Math.round(costs),
-            cumulative: Math.round(cumulativeCashFlow)
-          });
-        }
-
-        const totalInvestmentCalc = totalProgramCost;
-        const totalBenefits = totalAnnualBenefits * analysisYears;
-        const netBenefit = totalBenefits - totalInvestmentCalc;
-        const roi = (netBenefit / totalInvestmentCalc) * 100;
+        const calculation = calculateProgramROI({
+          program,
+          benefits: programBenefits,
+          discountRate: 0.08,
+        });
 
         roiCalculations[program.id] = {
-          roi: Math.round(roi * 10) / 10,
-          npv: Math.round(npv),
-          paybackPeriod: Math.round((paybackPeriod || analysisYears) * 10) / 10,
-          totalInvestment: Math.round(totalInvestmentCalc),
-          totalBenefits: Math.round(totalBenefits),
-          netBenefit: Math.round(netBenefit),
-          yearlyBreakdown
+          ...calculation,
+          roi: Math.round(calculation.roi * 10) / 10,
+          npv: Math.round(calculation.npv),
+          paybackPeriod: Math.round(calculation.paybackPeriod * 10) / 10,
+          totalInvestment: Math.round(calculation.totalInvestment),
+          annualBenefit: Math.round(calculation.annualBenefit),
+          totalBenefits: Math.round(calculation.totalBenefits),
+          netBenefit: Math.round(calculation.netBenefit),
+          benefitMultiple: Math.round(calculation.benefitMultiple * 100) / 100,
+          yearlyBreakdown: calculation.yearlyBreakdown.map((year) => ({
+            year: year.year,
+            benefits: Math.round(year.benefits),
+            costs: Math.round(year.costs),
+            cumulative: Math.round(year.cumulativeCashFlow),
+          })),
         };
       });
 

@@ -17,8 +17,11 @@ export interface ProgramROIData {
   npv: number;
   paybackPeriod: number;
   totalInvestment: number;
+  annualBenefit?: number;
   totalBenefits: number;
   netBenefit: number;
+  benefitMultiple?: number;
+  analysisYears?: number;
   yearlyBreakdown?: Array<{
     year: number;
     benefits: number;
@@ -47,6 +50,11 @@ export interface ComparisonData {
     paybackPeriod: number;
     totalInvestment: number;
     totalBenefits: number;
+    npv?: number;
+    netBenefit?: number;
+    annualBenefit?: number;
+    benefitMultiple?: number;
+    analysisYears?: number;
   }>;
 }
 
@@ -380,7 +388,7 @@ export class PDFExportService {
             `${calc.roi.toFixed(1)}%`,
             `$${calc.npv.toLocaleString()}`,
             `$${calc.netBenefit.toLocaleString()}`,
-            `${calc.paybackPeriod.toFixed(1)} yrs`
+            `${calc.paybackPeriod.toFixed(1)} mo`
           ];
         });
         
@@ -431,26 +439,27 @@ export class PDFExportService {
 
         // ROI Metrics
         if (roiCalc) {
+          const analysisYears = roiCalc.analysisYears || 5;
+          const annualBenefit = roiCalc.annualBenefit || (analysisYears > 0 ? roiCalc.totalBenefits / analysisYears : 0);
+          const benefitMultiple = roiCalc.benefitMultiple || (roiCalc.totalInvestment > 0 ? roiCalc.totalBenefits / roiCalc.totalInvestment : 0);
           this.currentY += 3;
-          this.addText('ROI Analysis (5-Year Projection):', 11, true);
-          this.addText(`• Expected ROI (5-Year): ${roiCalc.roi.toFixed(1)}%`, 10);
+          this.addText(`ROI Analysis (${analysisYears}-Year Projection):`, 11, true);
+          this.addText(`• Expected ROI (${analysisYears}-Year): ${roiCalc.roi.toFixed(1)}%`, 10);
           this.addText(`• Net Present Value (NPV): $${roiCalc.npv.toLocaleString()}`, 10);
           this.addText(`• Net Benefit: $${roiCalc.netBenefit.toLocaleString()}`, 10);
           this.doc.setTextColor(0, 0, 0);
-          this.addText(`• Payback Period: ${roiCalc.paybackPeriod.toFixed(1)} years`, 10);
-          this.addText(`• Total Benefits (5-Year): $${roiCalc.totalBenefits.toLocaleString()}`, 10);
-          this.addText(`• Benefit Multiple: ${(roiCalc.totalBenefits / roiCalc.totalInvestment).toFixed(2)}x`, 10);
+          this.addText(`• Payback Period: ${roiCalc.paybackPeriod.toFixed(1)} months`, 10);
+          this.addText(`• Total Benefits (${analysisYears}-Year): $${roiCalc.totalBenefits.toLocaleString()}`, 10);
+          this.addText(`• Benefit Multiple: ${benefitMultiple.toFixed(2)}x`, 10);
 
-          // 5-Year Benefits Projection - Always show full 5 years
+          // Benefits projection based on the actual analysis period
           this.currentY += 3;
-          this.addText('5-Year Benefits Projection:', 11, true);
+          this.addText(`${analysisYears}-Year Benefits Projection:`, 11, true);
           const yearHeaders = ['Year', 'Annual Benefits', 'Cumulative', 'Net Value'];
           
-          // Generate 5-year projection data
-          const annualBenefit = roiCalc.totalBenefits / 5; // Assuming 5-year total benefits
           const yearRows = [];
           let cumulativeBenefits = 0;
-          for (let year = 1; year <= 5; year++) {
+          for (let year = 1; year <= analysisYears; year++) {
             cumulativeBenefits += annualBenefit;
             const netValue = cumulativeBenefits - roiCalc.totalInvestment;
             yearRows.push([
@@ -527,7 +536,7 @@ export class PDFExportService {
         this.addText(`Total Expected Benefits: $${totalBenefits.toLocaleString()} across all programs.`);
       }
       if (avgPayback > 0) {
-        this.addText(`Average Payback Period: ${avgPayback.toFixed(1)} years.`);
+        this.addText(`Average Payback Period: ${avgPayback.toFixed(1)} months.`);
       }
 
       // Add footnotes if requested
@@ -561,26 +570,23 @@ export class PDFExportService {
         const calculation = data.calculations[program.id];
         const programBenefits = data.benefits[program.id] || [];
         const totalInvestment = calculation?.totalInvestment || 0;
-        const overheadCosts = program.overhead_costs || 0;
-        const participantCost = program.cost_per_participant * program.participants_count;
-        const analysisYears = 5;
-        
-        // Calculate total benefit ROI
-        const totalBenefitROI = programBenefits.reduce((sum, b) => {
+        const analysisYears = calculation?.analysisYears || 5;
+        const totalBenefitROI = calculation?.annualBenefit || programBenefits.reduce((sum, b) => {
           const totalValue = b.annual_value * (program.participants_count || 1);
           const attributionValue = totalValue * (b.attribution_percentage / 100);
           return sum + (attributionValue * (b.confidence_level / 100));
         }, 0);
+        const benefitMultiple = calculation?.benefitMultiple || (totalInvestment > 0 ? (calculation?.totalBenefits || 0) / totalInvestment : 0);
 
         // ROI Overview Section - matching the 4-card layout
         this.addSection('ROI Overview');
         
-        const roiHeaders = ['ROI (5-Year)', 'Net Present Value (5-Year)', 'Payback Period', 'Benefit Multiple'];
+        const roiHeaders = [`ROI (${analysisYears}-Year)`, `Net Present Value (${analysisYears}-Year)`, 'Payback Period', 'Benefit Multiple'];
         const roiValues = [
           `${calculation?.roi >= 0 ? '+' : ''}${calculation?.roi.toFixed(1) || '0.0'}%`,
-          `$${Math.round(totalBenefitROI * analysisYears - totalInvestment).toLocaleString()}`,
+          `$${Math.round(calculation?.npv || 0).toLocaleString()}`,
           `${calculation?.paybackPeriod.toFixed(1) || 'N/A'} mo`,
-          `${((totalBenefitROI * analysisYears) / totalInvestment).toFixed(1)}x`
+          `${benefitMultiple.toFixed(1)}x`
         ];
         const roiDescriptions = [
           `Net benefits over ${analysisYears} years`,
@@ -799,7 +805,7 @@ export class PDFExportService {
           ['Participants', ...data.programs.map(p => p.participants_count.toString())],
           ['Cost per Participant', ...data.programs.map(p => `$${p.cost_per_participant.toLocaleString()}`)],
           ['Total Investment', ...data.programs.map(p => `$${data.calculations[p.id]?.totalInvestment.toLocaleString() || 'N/A'}`)],
-          ['Expected ROI (5-Year)', ...data.programs.map(p => `${data.calculations[p.id]?.roi.toFixed(1) || '0.0'}%`)],
+          ['Expected ROI', ...data.programs.map(p => `${data.calculations[p.id]?.roi.toFixed(1) || '0.0'}%`)],
           ['Payback Period', ...data.programs.map(p => `${data.calculations[p.id]?.paybackPeriod.toFixed(1) || 'N/A'} mo`)]
         ];
         
@@ -812,8 +818,9 @@ export class PDFExportService {
           
           const calculation = data.calculations[program.id];
           if (calculation) {
+            const analysisYears = calculation.analysisYears || 5;
             this.addText(`Total Investment: $${calculation.totalInvestment.toLocaleString()}`, 12, true);
-            this.addText(`Expected ROI (5-Year): ${calculation.roi.toFixed(1)}%`, 12, true);
+            this.addText(`Expected ROI (${analysisYears}-Year): ${calculation.roi.toFixed(1)}%`, 12, true);
             this.addText(`Payback Period: ${calculation.paybackPeriod.toFixed(1)} months`, 12, true);
           }
 

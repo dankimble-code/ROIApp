@@ -115,7 +115,7 @@ export function ROIProjectionCard({ program }: ROIProjectionCardProps) {
                 <p className="text-sm text-muted-foreground">Annual Benefits</p>
               </div>
               <p className="font-semibold text-green-600">
-                {formatCurrency(roiCalculation.totalBenefits / roiCalculation.yearlyBreakdown.length)}
+                {formatCurrency(roiCalculation.annualBenefit)}
               </p>
             </div>
           </div>
@@ -135,9 +135,9 @@ export function ROIProjectionCard({ program }: ROIProjectionCardProps) {
               </Tooltip>
             </div>
             <Badge variant="outline">
-              {roiCalculation.paybackPeriod > 5 
-                ? '5+ years' 
-                : `${(Math.round(roiCalculation.paybackPeriod * 10) / 10).toFixed(1)} years`
+              {Number.isFinite(roiCalculation.paybackPeriod)
+                ? `${(Math.round(roiCalculation.paybackPeriod * 10) / 10).toFixed(1)} months`
+                : 'N/A'
               }
             </Badge>
           </div>

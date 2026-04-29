@@ -1,5 +1,6 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { Program, Benefit, Scenario, ROICalculation, SensitivityData } from '@/types/coaching';
+import { calculateAnnualBenefit, calculateProgramROI } from '@/lib/roi-calculations';
 
 // Extended return type to include validation state
 export interface ROICalculationResult extends ROICalculation {
@@ -80,8 +81,6 @@ export function useROICalculation(
       validationErrors.push(`Total program cost is zero or negative: ${totalProgramCost}`);
     }
 
-    const annualCosts = totalProgramCost / durationMonths * 12;
-    
     // Calculate total annual benefits with attribution (benefits are stored per participant)
     const totalAnnualBenefits = benefits.reduce((sum, benefit, idx) => {
       const annualValue = benefit.annual_value ?? 0;
@@ -105,75 +104,33 @@ export function useROICalculation(
       return sum + (annualValue * participantsCount * (attribution / 100) * (confidence / 100));
     }, 0);
 
-    const safeDiscountRate = Math.max(0, discountRate);
-    const analysisYears = Math.max(5, Math.ceil(durationMonths / 12) + 2);
-
-    const yearlyBreakdown = [];
-    let cumulativeCashFlow = -totalProgramCost;
-    let npv = -totalProgramCost;
-    let paybackPeriod = 0;
-
-    for (let year = 1; year <= analysisYears; year++) {
-      const isCoachingYear = year <= Math.ceil(durationMonths / 12);
-      const costs = isCoachingYear ? annualCosts : 0;
-      const yearBenefits = year <= Math.ceil(durationMonths / 12) ? 
-        totalAnnualBenefits * (year / Math.ceil(durationMonths / 12)) : 
-        totalAnnualBenefits;
-
-      const netCashFlow = yearBenefits - costs;
-      cumulativeCashFlow += netCashFlow;
-      
-      const discountFactor = Math.pow(1 + safeDiscountRate, year);
-      const discountedCashFlow = discountFactor > 0 ? netCashFlow / discountFactor : 0;
-      npv += discountedCashFlow;
-
-      if (paybackPeriod === 0 && cumulativeCashFlow >= 0 && netCashFlow > 0) {
-        const previousCumulative = cumulativeCashFlow - netCashFlow;
-        paybackPeriod = year - 1 + Math.abs(previousCumulative) / netCashFlow;
-      }
-
-      yearlyBreakdown.push({
-        year,
-        benefits: yearBenefits,
-        costs,
-        netCashFlow,
-        cumulativeCashFlow,
-        discountedCashFlow
-      });
-    }
-
-    const totalInvestment = totalProgramCost;
-    const totalBenefits = totalAnnualBenefits * analysisYears;
-    const netBenefit = totalBenefits - totalInvestment;
-    const roi = totalInvestment > 0 ? (netBenefit / totalInvestment) * 100 : 0;
+    const calculation = calculateProgramROI({
+      program,
+      benefits,
+      discountRate,
+    });
 
     // Log the calculated values
     console.log(`[ROI Calc #${calcId}] Output:`, {
-      totalInvestment,
-      totalBenefits,
-      netBenefit,
-      roi: roi.toFixed(2),
-      paybackPeriod: (paybackPeriod || analysisYears).toFixed(2),
-      npv: npv.toFixed(2),
-      analysisYears,
+      totalInvestment: calculation.totalInvestment,
+      annualBenefit: calculateAnnualBenefit(program, benefits),
+      totalBenefits: calculation.totalBenefits,
+      netBenefit: calculation.netBenefit,
+      roi: calculation.roi.toFixed(2),
+      paybackPeriod: calculation.paybackPeriod.toFixed(2),
+      npv: calculation.npv.toFixed(2),
+      analysisYears: calculation.analysisYears,
       validationErrors,
     });
 
     // Check for NPV changes
-    if (previousNpv.current !== null && Math.abs(previousNpv.current - npv) > 0.01) {
-      console.warn(`[ROI Calc #${calcId}] NPV CHANGED from ${previousNpv.current.toFixed(2)} to ${npv.toFixed(2)}`);
+    if (previousNpv.current !== null && Math.abs(previousNpv.current - calculation.npv) > 0.01) {
+      console.warn(`[ROI Calc #${calcId}] NPV CHANGED from ${previousNpv.current.toFixed(2)} to ${calculation.npv.toFixed(2)}`);
     }
-    previousNpv.current = npv;
+    previousNpv.current = calculation.npv;
 
     return {
-      totalInvestment,
-      totalBenefits,
-      netBenefit,
-      roi,
-      paybackPeriod: paybackPeriod || analysisYears,
-      npv,
-      analysisYears,
-      yearlyBreakdown,
+      ...calculation,
       isValid: validationErrors.length === 0,
       validationErrors,
     };

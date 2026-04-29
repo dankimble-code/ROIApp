@@ -41,14 +41,21 @@ export function ROIWaterfallChart({
     });
 
     // Add each benefit category
+    const totalAnnualShare = benefits.reduce((sum, benefit) => {
+      return sum + ((benefit.annual_value * benefit.attribution_percentage / 100) * (benefit.confidence_level / 100));
+    }, 0);
+
     const benefitsByCategory = benefits.reduce((acc, benefit) => {
-      const attributedValue = (benefit.annual_value * benefit.attribution_percentage / 100) * 
-                             (benefit.confidence_level / 100);
-      
+      const attributedValue = (benefit.annual_value * benefit.attribution_percentage / 100) *
+        (benefit.confidence_level / 100);
+      const proportionalTotal = totalAnnualShare > 0
+        ? (attributedValue / totalAnnualShare) * roiCalculation.totalBenefits
+        : 0;
+
       if (!acc[benefit.category]) {
         acc[benefit.category] = 0;
       }
-      acc[benefit.category] += attributedValue;
+      acc[benefit.category] += proportionalTotal;
       return acc;
     }, {} as Record<string, number>);
 

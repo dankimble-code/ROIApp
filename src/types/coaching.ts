@@ -70,10 +70,12 @@ export interface AuditLog {
 
 export interface ROICalculation {
   totalInvestment: number;
+  annualBenefit: number;
   totalBenefits: number;
   netBenefit: number;
   roi: number;
   paybackPeriod: number;
+  benefitMultiple: number;
   npv: number;
   analysisYears: number;
   yearlyBreakdown: {

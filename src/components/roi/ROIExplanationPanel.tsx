@@ -89,7 +89,7 @@ export function ROIExplanationPanel({
           </div>
           <div className="text-center p-3 bg-muted/50 rounded-lg">
             <div className="text-2xl font-bold">
-              {(roiCalculation.totalBenefits / roiCalculation.totalInvestment).toFixed(1)}x
+              {roiCalculation.benefitMultiple.toFixed(1)}x
             </div>
             <div className="text-sm text-muted-foreground">Multiple</div>
           </div>

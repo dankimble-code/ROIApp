@@ -7,6 +7,7 @@ import { usePrograms } from '@/hooks/usePrograms';
 import { useBenefits } from '@/hooks/useBenefits';
 // import { PDFExportService, ComparisonData } from '@/lib/pdf-export';
 import { useToast } from '@/hooks/use-toast';
+import { calculateProgramROI } from '@/lib/roi-calculations';
 
 interface CompareViewProps {
   programIds: string[];
@@ -28,20 +29,14 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
 
   const calculateROI = (program: Program & { organization: Organization }) => {
     const benefits = benefitsByProgram[program.id] || [];
-    const totalInvestment = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
-    const totalBenefits = benefits.reduce((sum, benefit) => 
-      sum + (benefit.annual_value * (benefit.attribution_percentage / 100)), 0
-    );
-    return totalBenefits > 0 ? ((totalBenefits - totalInvestment) / totalInvestment) * 100 : 0;
+    if (benefits.length === 0) return 0;
+    return calculateProgramROI({ program, benefits, discountRate: 0.08 }).roi;
   };
 
   const calculatePayback = (program: Program & { organization: Organization }) => {
     const benefits = benefitsByProgram[program.id] || [];
-    const totalInvestment = (program.cost_per_participant * program.participants_count) + program.overhead_costs;
-    const annualBenefits = benefits.reduce((sum, benefit) => 
-      sum + (benefit.annual_value * (benefit.attribution_percentage / 100)), 0
-    );
-    return annualBenefits > 0 ? totalInvestment / annualBenefits : 0;
+    if (benefits.length === 0) return Number.POSITIVE_INFINITY;
+    return calculateProgramROI({ program, benefits, discountRate: 0.08 }).paybackPeriod;
   };
 
   const handleExportComparison = async () => {
@@ -165,7 +160,7 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
                   <td className="p-4 font-medium text-muted-foreground">Payback Period</td>
                   {programs.map((program) => (
                     <td key={program.id} className="p-4">
-                      {calculatePayback(program).toFixed(1)} years
+                      {Number.isFinite(calculatePayback(program)) ? `${calculatePayback(program).toFixed(1)} months` : 'N/A'}
                     </td>
                   ))}
                 </tr>
@@ -213,7 +208,7 @@ export function CompareView({ programIds, onBack }: CompareViewProps) {
                     <div>
                       <p className="text-muted-foreground">Payback Period</p>
                       <p className="font-medium text-lg">
-                        {calculatePayback(program).toFixed(1)} years
+                        {Number.isFinite(calculatePayback(program)) ? `${calculatePayback(program).toFixed(1)} months` : 'N/A'}
                       </p>
                     </div>
                     <div>

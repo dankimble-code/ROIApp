@@ -12,12 +12,12 @@ interface ROIChartProps {
 
 export function ROIChart({ roiCalculation, type = 'cashflow', title }: ROIChartProps) {
   const chartConfig = {
-    benefits: {
+    benefitInflow: {
       label: 'Benefits',
       color: 'hsl(17 100% 60%)', // Resonance orange
     },
-    costs: {
-      label: 'Costs',
+    investmentOutflow: {
+      label: 'Upfront Investment',
       color: 'hsl(218 48% 13%)', // Resonance navy
     },
     netCashFlow: {
@@ -31,9 +31,9 @@ export function ROIChart({ roiCalculation, type = 'cashflow', title }: ROIChartP
   };
 
   const data = roiCalculation.yearlyBreakdown.map(year => ({
-    year: `Year ${year.year}`,
-    benefits: year.benefits,
-    costs: year.costs,
+    year: year.year === 0 ? 'Year 0' : `Year ${year.year}`,
+    benefitInflow: year.benefits,
+    investmentOutflow: year.costs > 0 ? -year.costs : 0,
     netCashFlow: year.netCashFlow,
     cumulativeCashFlow: year.cumulativeCashFlow,
   }));
@@ -68,19 +68,18 @@ export function ROIChart({ roiCalculation, type = 'cashflow', title }: ROIChartP
                 />
                 <Line
                   type="monotone"
-                  dataKey="cumulativeCashFlow"
-                  stroke="var(--color-cumulativeCashFlow)"
-                  strokeWidth={3}
-                  dot={{ r: 4 }}
-                />
-                {/* Zero line */}
-                <Line
-                  type="monotone"
                   dataKey={() => 0}
                   stroke="hsl(var(--muted-foreground))"
                   strokeWidth={1}
                   strokeDasharray="5 5"
                   dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cumulativeCashFlow"
+                  stroke="var(--color-cumulativeCashFlow)"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -118,15 +117,15 @@ export function ROIChart({ roiCalculation, type = 'cashflow', title }: ROIChartP
                 />} 
               />
               <Bar
-                dataKey="benefits"
-                fill="var(--color-benefits)"
-                name="Benefits"
+                dataKey="investmentOutflow"
+                fill="var(--color-investmentOutflow)"
+                name="Upfront Investment"
                 radius={[2, 2, 0, 0]}
               />
               <Bar
-                dataKey="costs"
-                fill="var(--color-costs)"
-                name="Costs"
+                dataKey="benefitInflow"
+                fill="var(--color-benefitInflow)"
+                name="Benefits"
                 radius={[2, 2, 0, 0]}
               />
             </BarChart>

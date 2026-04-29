@@ -16,6 +16,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { ExportOptionsDialog } from '@/components/export/ExportOptionsDialog';
 import { ExportProgramDialog } from '@/components/export/ExportProgramDialog';
 import { useState } from 'react';
+import { calculateProgramROI } from '@/lib/roi-calculations';
 
 interface CalculationPageState {
   organization: any;
@@ -66,6 +67,13 @@ export default function Calculation() {
     benefits,
     effectiveScenario as any
   );
+  const fallbackCalculation = program?.id && benefits.length > 0
+    ? calculateProgramROI({
+        program: program as any,
+        benefits,
+        discountRate: effectiveScenario.discount_rate,
+      })
+    : null;
 
   // Log state for debugging NPV issues
   console.log('[Calculation Page] State:', {
@@ -90,40 +98,24 @@ export default function Calculation() {
   const isCalculationValid = roiCalculation?.isValid ?? hasValidInputs;
   
   // Calculate total benefits for display
-  const totalAnnualValue = benefits.reduce((sum, benefit) => 
-    sum + (benefit.annual_value || 0) * participantCount, 0
-  );
-  
   const totalAttributableValue = benefits.reduce((sum, benefit) => 
     sum + ((benefit.annual_value || 0) * participantCount * ((benefit.attribution_percentage || 0) / 100) * ((benefit.confidence_level || 0) / 100)), 0
   );
   
   // Use values from the hook if available, otherwise calculate manually
-  const analysisYears = roiCalculation?.analysisYears ?? 5;
-  const roi = roiCalculation?.roi ?? (totalProgramCost > 0 ? ((totalAttributableValue * analysisYears - totalProgramCost) / totalProgramCost) * 100 : 0);
-  const paybackPeriod = roiCalculation?.paybackPeriod ?? (totalAttributableValue > 0 ? totalProgramCost / (totalAttributableValue / 12) : 0);
-  const netBenefit = roiCalculation?.netBenefit ?? (totalAttributableValue * analysisYears - totalProgramCost);
-  
-  // Calculate NPV manually if not available from hook
-  const discountRate = effectiveScenario.discount_rate;
-  const npv = roiCalculation?.npv ?? (() => {
-    if (totalProgramCost <= 0 || totalAttributableValue <= 0) {
-      console.log('[Calculation Page] NPV fallback skipped - invalid inputs:', { totalProgramCost, totalAttributableValue });
-      return null;
-    }
-    let calculatedNpv = -totalProgramCost;
-    for (let year = 1; year <= analysisYears; year++) {
-      const annualBenefit = totalAttributableValue;
-      const discountedBenefit = annualBenefit / Math.pow(1 + discountRate, year);
-      calculatedNpv += discountedBenefit;
-    }
-    console.log('[Calculation Page] NPV fallback calculated:', calculatedNpv);
-    return calculatedNpv;
-  })();
+  const effectiveCalculation = roiCalculation ?? fallbackCalculation;
+  const analysisYears = effectiveCalculation?.analysisYears ?? 5;
+  const roi = effectiveCalculation?.roi ?? 0;
+  const paybackPeriod = effectiveCalculation?.paybackPeriod ?? Number.POSITIVE_INFINITY;
+  const netBenefit = effectiveCalculation?.netBenefit ?? 0;
+  const npv = effectiveCalculation?.npv ?? null;
+  const displayTotalInvestment = effectiveCalculation?.totalInvestment ?? totalProgramCost;
+  const displayAnnualBenefit = effectiveCalculation?.annualBenefit ?? totalAttributableValue;
+  const displayTotalBenefits = effectiveCalculation?.totalBenefits ?? (displayAnnualBenefit * analysisYears);
 
   // Helper to format values with 1 decimal place or show N/A
   const formatValueOrNA = (value: number | null | undefined, formatter: (v: number) => string): string => {
-    if (value === null || value === undefined || isNaN(value)) {
+    if (value === null || value === undefined || !Number.isFinite(value) || isNaN(value)) {
       return 'N/A';
     }
     return formatter(value);
@@ -178,9 +170,14 @@ export default function Calculation() {
       const calculationData = {
         [exportProgram.id]: {
           roi: roi,
-          paybackPeriod: paybackPeriod / 12,
+          paybackPeriod: paybackPeriod,
           totalInvestment: totalProgramCost,
-          totalBenefits: totalAttributableValue
+          totalBenefits: effectiveCalculation?.totalBenefits ?? (totalAttributableValue * analysisYears),
+          npv: effectiveCalculation?.npv ?? 0,
+          netBenefit: effectiveCalculation?.netBenefit ?? netBenefit,
+          analysisYears: effectiveCalculation?.analysisYears ?? analysisYears,
+          annualBenefit: effectiveCalculation?.annualBenefit ?? totalAttributableValue,
+          benefitMultiple: effectiveCalculation?.benefitMultiple ?? (totalProgramCost > 0 ? (totalAttributableValue * analysisYears) / totalProgramCost : 0),
         }
       };
 
@@ -242,36 +239,21 @@ export default function Calculation() {
       selectedPrograms.forEach(prog => {
         const progBenefits = benefitsByProgram[prog.id] || [];
         if (progBenefits.length === 0) return;
-        const totalCost = (prog.cost_per_participant * prog.participants_count) + (prog.overhead_costs || 0);
-        const annualCosts = totalCost / prog.duration_months * 12;
-        const discountRateCalc = 0.08;
-        const totalAnnualBenefits = progBenefits.reduce((sum: number, b: any) =>
-          sum + (b.annual_value * prog.participants_count * (b.attribution_percentage / 100) * (b.confidence_level / 100)), 0);
-        const years = Math.max(5, Math.ceil(prog.duration_months / 12) + 2);
-        let cumCF = -totalCost;
-        let npvCalc = -totalCost;
-        let pp = 0;
-        for (let y = 1; y <= years; y++) {
-          const isCoaching = y <= Math.ceil(prog.duration_months / 12);
-          const costs = isCoaching ? annualCosts : 0;
-          const ben = y <= Math.ceil(prog.duration_months / 12) ? totalAnnualBenefits * (y / Math.ceil(prog.duration_months / 12)) : totalAnnualBenefits;
-          const net = ben - costs;
-          cumCF += net;
-          npvCalc += net / Math.pow(1 + discountRateCalc, y);
-          if (pp === 0 && cumCF >= 0) {
-            const prev = cumCF - net;
-            pp = y - 1 + Math.abs(prev) / net;
-          }
-        }
-        const totalBen = totalAnnualBenefits * years;
-        const netBen = totalBen - totalCost;
+        const calculation = calculateProgramROI({
+          program: prog,
+          benefits: progBenefits,
+          discountRate: 0.08,
+        });
         roiCalculations[prog.id] = {
-          roi: Math.round((netBen / totalCost) * 1000) / 10,
-          npv: Math.round(npvCalc),
-          paybackPeriod: Math.round((pp || years) * 10) / 10,
-          totalInvestment: Math.round(totalCost),
-          totalBenefits: Math.round(totalBen),
-          netBenefit: Math.round(netBen),
+          ...calculation,
+          roi: Math.round(calculation.roi * 10) / 10,
+          npv: Math.round(calculation.npv),
+          paybackPeriod: Math.round(calculation.paybackPeriod * 10) / 10,
+          totalInvestment: Math.round(calculation.totalInvestment),
+          annualBenefit: Math.round(calculation.annualBenefit),
+          totalBenefits: Math.round(calculation.totalBenefits),
+          netBenefit: Math.round(calculation.netBenefit),
+          benefitMultiple: Math.round(calculation.benefitMultiple * 100) / 100,
         };
       });
 
@@ -298,7 +280,7 @@ export default function Calculation() {
   };
 
   // Check if we have valid ROI calculation data for charts
-  const hasChartData = roiCalculation && roiCalculation.yearlyBreakdown && roiCalculation.yearlyBreakdown.length > 0;
+  const hasChartData = !!effectiveCalculation?.yearlyBreakdown?.length;
 
   return (
     <AppLayout>
@@ -398,7 +380,7 @@ export default function Calculation() {
               </div>
               <div className="text-3xl font-bold text-orange-600">
                 {formatValueOrNA(
-                  roiCalculation ? (roiCalculation.totalBenefits / roiCalculation.totalInvestment) : (totalProgramCost > 0 ? (totalAttributableValue * analysisYears) / totalProgramCost : null),
+                  effectiveCalculation ? effectiveCalculation.benefitMultiple : null,
                   (v) => `${formatOneDecimal(v)}x`
                 )}
               </div>
@@ -420,14 +402,14 @@ export default function Calculation() {
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
               <div className="min-w-0 overflow-hidden">
                 <ROIChart 
-                  roiCalculation={roiCalculation}
+                  roiCalculation={effectiveCalculation}
                   type="cashflow"
                   title={`Annual Cash Flow Analysis (${analysisYears}-Year Period)`}
                 />
               </div>
               <div className="min-w-0 overflow-hidden">
                 <ROIChart 
-                  roiCalculation={roiCalculation}
+                  roiCalculation={effectiveCalculation}
                   type="cumulative"
                   title={`Cumulative ROI Projection (${analysisYears}-Year Period)`}
                 />
@@ -478,7 +460,7 @@ export default function Calculation() {
                   <Separator />
                   <div className="flex justify-between font-medium">
                     <span>Total Investment:</span>
-                    <span>{formatCurrency(totalProgramCost)}</span>
+                    <span>{formatCurrency(displayTotalInvestment)}</span>
                   </div>
                 </div>
               </div>
@@ -527,7 +509,7 @@ export default function Calculation() {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <span className="text-muted-foreground">Total Investment:</span>
-                <div className="text-xl font-bold">{formatCurrency(totalProgramCost)}</div>
+                <div className="text-xl font-bold">{formatCurrency(displayTotalInvestment)}</div>
                 <div className="text-xs text-muted-foreground">Per employee: {formatCurrency(costPerParticipant)}</div>
                 {(program.overhead_costs || 0) > 0 && (
                   <div className="text-xs text-muted-foreground">Overhead costs: {formatCurrency(program.overhead_costs || 0)}</div>
@@ -535,9 +517,9 @@ export default function Calculation() {
               </div>
               <div>
                 <span className="text-muted-foreground">Total Annual Benefit:</span>
-                <div className="text-xl font-bold text-primary">{formatCurrency(totalAttributableValue)}</div>
+                <div className="text-xl font-bold text-primary">{formatCurrency(displayAnnualBenefit)}</div>
                 <div className="text-xs text-muted-foreground">
-                  {analysisYears}-year total: {formatCurrency(totalAttributableValue * analysisYears)}
+                  {analysisYears}-year total: {formatCurrency(displayTotalBenefits)}
                 </div>
               </div>
             </div>

@@ -107,7 +107,12 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
           roi: roiCalculation.roi,
           paybackPeriod: roiCalculation.paybackPeriod,
           totalInvestment: roiCalculation.totalInvestment,
-          totalBenefits: roiCalculation.totalBenefits
+          totalBenefits: roiCalculation.totalBenefits,
+          npv: roiCalculation.npv,
+          netBenefit: roiCalculation.netBenefit,
+          analysisYears: roiCalculation.analysisYears,
+          annualBenefit: roiCalculation.annualBenefit,
+          benefitMultiple: roiCalculation.benefitMultiple,
         }
       };
 
@@ -198,7 +203,7 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
               
               <MetricCard
                 title={`Benefit Multiple (${roiCalculation.analysisYears}-Year)`}
-                value={`${(Math.round((roiCalculation.totalBenefits / roiCalculation.totalInvestment) * 10) / 10).toFixed(1)}x`}
+                value={`${(Math.round(roiCalculation.benefitMultiple * 10) / 10).toFixed(1)}x`}
                 description={`Total ${roiCalculation.analysisYears}-year benefits divided by investment`}
                 variant="orange"
               />
@@ -298,7 +303,7 @@ export function EnhancedROIDashboard({ program }: EnhancedROIDashboardProps) {
                       <div key={index} className="flex justify-between">
                         <span className="text-sm">{benefit.category}</span>
                         <span className="font-medium text-sm">
-                          {formatCurrency((benefit.annual_value * benefit.attribution_percentage / 100) * (benefit.confidence_level / 100))}
+                          {formatCurrency((benefit.annual_value * program.participants_count * benefit.attribution_percentage / 100) * (benefit.confidence_level / 100))}
                         </span>
                       </div>
                     ))}
