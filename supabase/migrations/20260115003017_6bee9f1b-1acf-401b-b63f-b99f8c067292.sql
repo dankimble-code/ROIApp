@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS public.benefit_defaults (
     category text NOT NULL UNIQUE,
     description text NOT NULL,
     default_value numeric NOT NULL DEFAULT 10000,
-    default_attribution numeric NOT NULL DEFAULT 50,
+    default_attribution numeric NOT NULL DEFAULT 10,
     default_confidence numeric NOT NULL DEFAULT 80,
     created_at timestamp with time zone NOT NULL DEFAULT now(),
     updated_at timestamp with time zone NOT NULL DEFAULT now()
@@ -124,14 +124,14 @@ $$;
 
 -- Insert default benefit values
 INSERT INTO public.benefit_defaults (category, description, default_value, default_attribution, default_confidence) VALUES
-('Productivity Gains', 'Increased productivity from improved focus and time management skills per participant', 10000, 50, 80),
-('Retention Improvement', 'Reduced turnover costs per participant through improved employee satisfaction', 15000, 50, 80),
-('Performance Enhancement', 'Improved individual performance metrics per participant', 10000, 50, 80),
-('Decision Making', 'Better decision-making per participant leading to cost savings and opportunities', 10000, 50, 80),
-('Team Effectiveness', 'Improved collaboration and team dynamics per participant', 10000, 50, 80),
-('Innovation', 'Increased innovation and creative problem-solving per participant', 10000, 50, 80),
-('Customer Satisfaction', 'Improved customer relationships and satisfaction scores per participant', 10000, 50, 80),
-('Other', 'Custom benefit specific to your organization per participant', 10000, 50, 80)
+('Productivity Gains', 'Increased productivity from improved focus and time management skills per participant', 10000, 10, 80),
+('Retention Improvement', 'Reduced turnover costs per participant through improved employee satisfaction', 15000, 10, 80),
+('Performance Enhancement', 'Improved individual performance metrics per participant', 10000, 10, 80),
+('Decision Making', 'Better decision-making per participant leading to cost savings and opportunities', 10000, 10, 80),
+('Team Effectiveness', 'Improved collaboration and team dynamics per participant', 10000, 10, 80),
+('Innovation', 'Increased innovation and creative problem-solving per participant', 10000, 10, 80),
+('Customer Satisfaction', 'Improved customer relationships and satisfaction scores per participant', 10000, 10, 80),
+('Other', 'Custom benefit specific to your organization per participant', 10000, 10, 80)
 ON CONFLICT (category) DO NOTHING;
 
 -- Add trigger for updated_at
