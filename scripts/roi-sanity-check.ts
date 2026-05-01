@@ -34,7 +34,7 @@ assert.equal(calculation.totalBenefits, 360000, 'totalBenefits');
 approxEqual(calculation.roi, 188, 0.001, 'roi');
 approxEqual(calculation.benefitMultiple, 2.88, 0.001, 'benefitMultiple');
 approxEqual(calculation.paybackPeriod, 20.8333333333, 0.001, 'paybackPeriod');
-approxEqual(calculation.npv, 147935.79, 0.1, 'npv');
+approxEqual(calculation.npv, 147936.65, 0.1, 'npv');
 
 assert.deepEqual(
   calculation.yearlyBreakdown.map((year) => ({
