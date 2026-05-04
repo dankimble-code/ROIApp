@@ -41,7 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/email-confirmed`;
+    // Use the site root as the auth callback target so production signups
+    // continue to work even if a dedicated confirmation route is not present
+    // in the Supabase redirect allowlist yet.
+    const redirectUrl = window.location.origin;
     
     const { error } = await supabase.auth.signUp({
       email,
