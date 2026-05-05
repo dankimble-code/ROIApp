@@ -5,22 +5,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calculator, TrendingUp, Users, Target } from 'lucide-react';
+import { Calculator, TrendingUp, Users, Target, ShieldCheck } from 'lucide-react';
 import { BrandedLoader } from '@/components/ui/branded-loader';
 import { Footer } from '@/components/layout/Footer';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { useCreateAccessRequest } from '@/hooks/useAdminAccess';
 // Using the standard logo
 const resonanceLogo = '/resonance-logo.png';
 export default function Auth() {
   const {
     user,
     signIn,
-    signUp,
     loading
   } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestEmail, setRequestEmail] = useState('');
+  const [requestName, setRequestName] = useState('');
+  const [requestCompany, setRequestCompany] = useState('');
+  const [requestMessage, setRequestMessage] = useState('');
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const createAccessRequest = useCreateAccessRequest();
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
         <BrandedLoader size="xl" message="Connecting to Resonance Platform..." variant="resonance" />
@@ -35,11 +42,19 @@ export default function Auth() {
     await signIn(email, password);
     setIsSubmitting(false);
   };
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleRequestAccess = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    await signUp(email, password);
-    setIsSubmitting(false);
+    await createAccessRequest.mutateAsync({
+      email: requestEmail,
+      fullName: requestName,
+      company: requestCompany,
+      message: requestMessage,
+    });
+    setRequestEmail('');
+    setRequestName('');
+    setRequestCompany('');
+    setRequestMessage('');
+    setShowRequestDialog(false);
   };
   return <div className="min-h-screen hero-gradient resonance-pattern-strong flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
@@ -118,44 +133,73 @@ export default function Auth() {
             </div>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="signin">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input id="signin-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
+            <div className="space-y-6">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 text-primary" />
+                  <div className="space-y-1">
+                    <p className="font-medium text-foreground">Invitation-only access</p>
+                    <p className="text-muted-foreground">
+                      New accounts are provisioned by an administrator. If you need access,
+                      please contact Resonance Executive Coaching for approval.
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <Input id="signin-password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Signing In...' : 'Sign In'}
-                  </Button>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input id="signup-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <Input id="signup-password" type="password" placeholder="Create a password" value={password} onChange={e => setPassword(e.target.value)} required />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating Account...' : 'Create Account'}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="outline">
+                      Request Access
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Request Access</DialogTitle>
+                      <DialogDescription>
+                        Submit your details and an administrator can review your request for access.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleRequestAccess} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="request-name">Full name</Label>
+                        <Input id="request-name" value={requestName} onChange={e => setRequestName(e.target.value)} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="request-email">Email</Label>
+                        <Input id="request-email" type="email" value={requestEmail} onChange={e => setRequestEmail(e.target.value)} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="request-company">Company</Label>
+                        <Input id="request-company" value={requestCompany} onChange={e => setRequestCompany(e.target.value)} placeholder="Optional" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="request-message">Message</Label>
+                        <Textarea id="request-message" value={requestMessage} onChange={e => setRequestMessage(e.target.value)} placeholder="Optional context for the admin team." rows={3} />
+                      </div>
+                      <Button type="submit" className="w-full" disabled={createAccessRequest.isPending}>
+                        {createAccessRequest.isPending ? 'Submitting...' : 'Submit Request'}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <Input id="signin-email" type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Password</Label>
+                  <Input id="signin-password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} required />
+                </div>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? 'Signing In...' : 'Sign In'}
+                </Button>
+              </form>
+            </div>
           </CardContent>
         </Card>
       </div>

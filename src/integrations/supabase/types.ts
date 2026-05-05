@@ -47,6 +47,63 @@ export type Database = {
         }
         Relationships: []
       }
+      access_requests: {
+        Row: {
+          company: string | null
+          email: string
+          full_name: string
+          id: string
+          message: string | null
+          requested_at: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          company?: string | null
+          email: string
+          full_name: string
+          id?: string
+          message?: string | null
+          requested_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          company?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          message?: string | null
+          requested_at?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      admin_email_allowlist: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+        }
+        Relationships: []
+      }
       benchmarks: {
         Row: {
           created_at: string
@@ -281,6 +338,27 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_sign_in_at: string | null
+        }
+        Insert: {
+          created_at: string
+          email: string
+          id: string
+          last_sign_in_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_sign_in_at?: string | null
         }
         Relationships: []
       }

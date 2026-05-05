@@ -7,3 +7,4 @@ export * from './useAuditLogs';
 export * from './useROICalculation';
 export * from './useScenarios';
 export * from './useIndustryBenchmarks';
+export * from './useAdminAccess';
