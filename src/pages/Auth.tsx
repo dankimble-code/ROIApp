@@ -17,6 +17,7 @@ export default function Auth() {
   const {
     user,
     signIn,
+    requestPasswordReset,
     loading
   } = useAuth();
   const [email, setEmail] = useState('');
@@ -27,6 +28,8 @@ export default function Auth() {
   const [requestCompany, setRequestCompany] = useState('');
   const [requestMessage, setRequestMessage] = useState('');
   const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const createAccessRequest = useCreateAccessRequest();
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-gradient-hero">
@@ -55,6 +58,14 @@ export default function Auth() {
     setRequestCompany('');
     setRequestMessage('');
     setShowRequestDialog(false);
+  };
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await requestPasswordReset(resetEmail);
+    if (!error) {
+      setResetEmail('');
+      setShowResetDialog(false);
+    }
   };
   return <div className="min-h-screen hero-gradient resonance-pattern-strong flex flex-col">
       <div className="flex-1 flex items-center justify-center p-4">
@@ -143,11 +154,14 @@ export default function Auth() {
                       New accounts are provisioned by an administrator. If you need access,
                       please contact Resonance Executive Coaching for approval.
                     </p>
+                    <p className="text-muted-foreground">
+                      If your administrator sent you a temporary password, sign in below and reset it after your first login.
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-2">
                 <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
                   <DialogTrigger asChild>
                     <Button type="button" variant="outline">
@@ -180,6 +194,30 @@ export default function Auth() {
                       </div>
                       <Button type="submit" className="w-full" disabled={createAccessRequest.isPending}>
                         {createAccessRequest.isPending ? 'Submitting...' : 'Submit Request'}
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                  <DialogTrigger asChild>
+                    <Button type="button" variant="ghost">
+                      Forgot password?
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Reset your password</DialogTitle>
+                      <DialogDescription>
+                        Enter your email and we’ll send you a secure link to choose a new password.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handlePasswordReset} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-email">Email</Label>
+                        <Input id="reset-email" type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} required />
+                      </div>
+                      <Button type="submit" className="w-full">
+                        Send reset email
                       </Button>
                     </form>
                   </DialogContent>

@@ -25,6 +25,13 @@ export interface AdminUserSummary {
   roles: Array<'admin' | 'user'>;
 }
 
+export interface ProvisionedLoginResult {
+  email: string;
+  temporaryPassword: string;
+  resetLink: string | null;
+  isExistingUser: boolean;
+}
+
 interface CreateAccessRequestInput {
   email: string;
   fullName: string;
@@ -232,6 +239,42 @@ export function useRevokeAdminRole() {
     onError: (error: Error) => {
       toast({
         title: 'Unable to revoke admin access',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+export function useProvisionApprovedUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ accessRequestId }: { accessRequestId: string }): Promise<ProvisionedLoginResult> => {
+      const { data, error } = await supabase.functions.invoke('provision-approved-user', {
+        body: {
+          accessRequestId,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      return data as ProvisionedLoginResult;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-access-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast({
+        title: 'Temporary password ready',
+        description: 'Use the generated credentials to notify the approved user.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Unable to provision login',
         description: error.message,
         variant: 'destructive',
       });

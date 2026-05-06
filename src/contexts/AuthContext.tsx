@@ -8,6 +8,8 @@ interface AuthContextType {
   session: Session | null;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  requestPasswordReset: (email: string) => Promise<{ error: any }>;
+  updatePassword: (password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   loading: boolean;
 }
@@ -87,6 +89,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  const requestPasswordReset = async (email: string) => {
+    const redirectUrl = `${window.location.origin}/reset-password`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: redirectUrl,
+    });
+
+    if (error) {
+      toast({
+        title: 'Reset Password Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Reset Email Sent',
+        description: 'Check your email for the password reset link.',
+      });
+    }
+
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      toast({
+        title: 'Password Update Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Password Updated',
+        description: 'Your password has been updated successfully.',
+      });
+    }
+
+    return { error };
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -103,6 +149,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     signUp,
     signIn,
+    requestPasswordReset,
+    updatePassword,
     signOut,
     loading,
   };

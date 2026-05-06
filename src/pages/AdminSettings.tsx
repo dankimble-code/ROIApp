@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, DollarSign, Mail, Save, Settings, Shield, UserCheck, Users } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, Copy, DollarSign, KeyRound, Mail, Save, Settings, Shield, UserCheck, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useIsAdmin } from '@/hooks/useUserRole';
 import { useAdminBenefitDefaults, useUpdateBenefitDefault, BenefitDefault } from '@/hooks/useAdminBenefitDefaults';
 import {
   AccessRequest,
   AdminUserSummary,
+  ProvisionedLoginResult,
   useAdminAccessRequests,
   useAdminUsers,
   useGrantAdminRole,
+  useProvisionApprovedUser,
   useReviewAccessRequest,
   useRevokeAdminRole,
 } from '@/hooks/useAdminAccess';
@@ -109,13 +112,19 @@ function BenefitDefaultEditor({
 function AccessRequestReviewRow({
   request,
   onReview,
+  onProvision,
+  provisioningRequestId,
   isSaving,
 }: {
   request: AccessRequest;
   onReview: (requestId: string, status: AccessRequest['status'], reviewNotes: string) => void;
+  onProvision: (requestId: string) => void;
+  provisioningRequestId: string | null;
   isSaving: boolean;
 }) {
   const [notes, setNotes] = useState(request.review_notes || '');
+  const isProvisioning = provisioningRequestId === request.id;
+  const canProvision = request.status === 'approved' || request.status === 'invited';
 
   return (
     <div className="rounded-lg border p-4 space-y-4">
@@ -156,6 +165,12 @@ function AccessRequestReviewRow({
         <Button size="sm" variant="destructive" disabled={isSaving} onClick={() => onReview(request.id, 'rejected', notes)}>
           Reject
         </Button>
+        {canProvision && (
+          <Button size="sm" variant="secondary" disabled={isSaving || isProvisioning} onClick={() => onProvision(request.id)}>
+            <KeyRound className="mr-2 h-4 w-4" />
+            {isProvisioning ? 'Generating...' : 'Provision Login'}
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -222,6 +237,12 @@ export default function AdminSettings() {
   const reviewAccessRequest = useReviewAccessRequest();
   const grantAdminRole = useGrantAdminRole();
   const revokeAdminRole = useRevokeAdminRole();
+  const provisionApprovedUser = useProvisionApprovedUser();
+  const [provisionedLogin, setProvisionedLogin] = useState<ProvisionedLoginResult | null>(null);
+
+  const handleCopy = async (value: string) => {
+    await navigator.clipboard.writeText(value);
+  };
 
   const handleSaveBenefitDefault = (id: string, data: Partial<BenefitDefault>) => {
     updateBenefitDefault.mutate({ id, data });
@@ -234,6 +255,24 @@ export default function AdminSettings() {
       reviewNotes,
     });
   };
+
+  const handleProvisionRequest = (requestId: string) => {
+    provisionApprovedUser.mutate(
+      { accessRequestId: requestId },
+      {
+        onSuccess: (result) => {
+          setProvisionedLogin(result);
+        },
+      },
+    );
+  };
+
+  const emailDraftBody = provisionedLogin
+    ? `Hello,\n\nYour Coaching ROI access has been approved.\n\nSign-in page: ${window.location.origin}/auth\nEmail: ${provisionedLogin.email}\nTemporary password: ${provisionedLogin.temporaryPassword}\nPassword reset link: ${provisionedLogin.resetLink ?? `${window.location.origin}/reset-password`}\n\nPlease sign in and reset your password as soon as possible.\n\nResonance Executive Coaching`
+    : '';
+  const emailDraftHref = provisionedLogin
+    ? `mailto:${encodeURIComponent(provisionedLogin.email)}?subject=${encodeURIComponent('Your Coaching ROI access details')}&body=${encodeURIComponent(emailDraftBody)}`
+    : '#';
 
   if (isLoadingRole) {
     return (
@@ -368,6 +407,8 @@ export default function AdminSettings() {
                   key={request.id}
                   request={request}
                   isSaving={reviewAccessRequest.isPending}
+                  onProvision={handleProvisionRequest}
+                  provisioningRequestId={provisionApprovedUser.isPending ? provisionApprovedUser.variables?.accessRequestId ?? null : null}
                   onReview={handleReviewRequest}
                 />
               ))}
@@ -480,6 +521,74 @@ export default function AdminSettings() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!provisionedLogin} onOpenChange={(open) => !open && setProvisionedLogin(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              Login Provisioned
+            </DialogTitle>
+            <DialogDescription>
+              A temporary password has been created. Send these details to the approved user through your normal secure email process.
+            </DialogDescription>
+          </DialogHeader>
+
+          {provisionedLogin && (
+            <div className="space-y-4 text-sm">
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-medium">Email</p>
+                    <p className="text-muted-foreground">{provisionedLogin.email}</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleCopy(provisionedLogin.email)}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-medium">Temporary password</p>
+                    <p className="font-mono text-muted-foreground break-all">{provisionedLogin.temporaryPassword}</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleCopy(provisionedLogin.temporaryPassword)}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+
+                {provisionedLogin.resetLink && (
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-medium">Password reset link</p>
+                      <p className="text-muted-foreground break-all">{provisionedLogin.resetLink}</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleCopy(provisionedLogin.resetLink ?? '')}>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button asChild>
+                  <a href={emailDraftHref}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Open Email Draft
+                  </a>
+                </Button>
+                <Button variant="outline" onClick={() => handleCopy(emailDraftBody)}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Full Message
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
